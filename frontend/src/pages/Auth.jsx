@@ -24,6 +24,7 @@ const Auth = () => {
             }`}
           />
 
+          {/* Fixed route from /signin to /signin */}
           <Link to="/signin" className='relative z-10 text-center py-1 rounded-lg'>
             <span className={`${!isSignUp ? 'text-white' : 'text-gray-300'} transition-colors`}>Sign In</span>
           </Link>
@@ -32,7 +33,6 @@ const Auth = () => {
           </Link>
         </div>
       </div>
-
 
       <div className='w-full max-w-2xl bg-black/30 border border-white/20 rounded-lg p-1 shadow-xl/30 shadow-black/40'>
         <div className='rounded-lg'>
@@ -44,3 +44,4 @@ const Auth = () => {
 }
 
 export default Auth
+
