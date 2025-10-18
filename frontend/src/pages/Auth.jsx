@@ -8,32 +8,33 @@ const Auth = () => {
   const isSignUp = location.pathname === '/signup'
 
   return (
-    <div className='flex flex-col items-center justify-center max-w-screen min-h-screen overflow-scroll pb-16 bg-gradient-to-br from-zinc-950 via-[#0a0a11] to-zinc-950 text-white p-8'>
+    <div className='flex flex-col items-center justify-center max-w-screen min-h-screen overflow-scroll pb-16 bg-[#07061B] text-white p-8'>
       <div className='my-4 text-center'>
         <div className='text-4xl font-extrabold tracking-widest'>[MVMS]</div>
         <div className='text-lg '>Marine Vessel</div>
         <div className='text-lg '>Management System</div>
       </div>
 
-      <div className='w-full max-w-lg bg-black/50 border border-white/10 rounded-lg p-1 shadow-xl/30 shadow-black/40 mb-3 md:mb-6'>
-        <div className='flex items-center text-lg'>
-          <Link
-            to="/signin"
-            className={`flex-1 text-center py-1 rounded-lg transition-colors ${!isSignUp ? 'bg-zinc-900/70 text-gray-300' : 'bg-transparent text-white'}`}
-          >
-            Sign In
+      <div className='w-full max-w-lg bg-zinc-900cdcd border border-white/20 rounded-lg p-1 shadow-xl/30 shadow-black/40 mb-3 md:mb-6'>
+        <div className='relative grid grid-cols-2 text-lg'>
+          
+          <div
+            className={`absolute top-0 left-0 h-full w-1/2 rounded-md border border-white/10 bg-black/40 transition-transform duration-300 ease-out ${
+              isSignUp ? 'translate-x-full' : 'translate-x-0'
+            }`}
+          />
+
+          <Link to="/signin" className='relative z-10 text-center py-1 rounded-lg'>
+            <span className={`${!isSignUp ? 'text-white' : 'text-gray-300'} transition-colors`}>Sign In</span>
           </Link>
-          <Link
-            to="/signup"
-            className={`flex-1 text-center py-1 rounded-lg transition-colors ${isSignUp ? 'bg-zinc-900/70 text-gray-300' : 'bg-transparent text-white'}`}
-          >
-            Sign Up
+          <Link to="/signup" className='relative z-10 text-center py-1 rounded-lg'>
+            <span className={`${isSignUp ? 'text-white' : 'text-gray-300'} transition-colors`}>Sign Up</span>
           </Link>
         </div>
       </div>
 
 
-      <div className='w-full max-w-2xl bg-black/50 border border-white/10 rounded-lg p-1 shadow-xl/30 shadow-black/40'>
+      <div className='w-full max-w-2xl bg-black/30 border border-white/20 rounded-lg p-1 shadow-xl/30 shadow-black/40'>
         <div className='rounded-lg'>
           {isSignUp ? <SignUp /> : <SignIn />}
         </div>

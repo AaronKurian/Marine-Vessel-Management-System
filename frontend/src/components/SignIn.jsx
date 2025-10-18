@@ -24,7 +24,7 @@ const SignIn = () => {
       </div>
 
       <div className='flex justify-end pt-2'>
-        <button type='submit' className='bg-black text-white/70 font-semibold rounded-xl px-8 py-3 hover:text-white/90 border border-white/10 transition-colors'>
+        <button type='submit' className='bg-[#D9D9D9] text-black font-semibold rounded-xl px-8 py-3 cursor-pointer hover:scale-105 border border-white/10 transition-colors'>
           Sign In
         </button>
       </div>

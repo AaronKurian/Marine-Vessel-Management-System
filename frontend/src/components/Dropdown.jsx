@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Select an option' }) => {
+const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Select an option', className = '' }) => {
   const containerRef = useRef(null)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -17,14 +17,14 @@ const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Sel
   }, [])
 
   return (
-    <div ref={containerRef} className='relative'>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         id={inputId}
         type='button'
         aria-haspopup='listbox'
         aria-expanded={isOpen}
         onClick={() => setIsOpen((v) => !v)}
-        className='peer relative w-full bg-black/50 border border-white/10 text-white rounded-lg px-4 pt-6 pb-2 text-left outline-none'
+        className='peer relative w-full bg-black/10 border cursor-pointer border-white/10 text-white rounded-lg px-4 pt-6 pb-2 text-left outline-none'
       >
         {hasValue ? (
           <span>{value}</span>
@@ -47,7 +47,7 @@ const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Sel
         htmlFor={inputId}
         className={`pointer-events-none absolute left-3 text-gray-300 text-base transition-all duration-150 leading-none ${
           hasValue || isOpen
-            ? 'top-0 -translate-y-1/2 text-sm bg-black/50 px-1 rounded-lg'
+            ? 'top-0 -translate-y-1/2 text-sm bg-black/10 px-1 rounded-lg'
             : 'top-1/2 -translate-y-1/2'
         }`}
       >
@@ -57,7 +57,7 @@ const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Sel
       {isOpen && (
         <div
           role='listbox'
-          className='absolute z-10 mt-2 max-h-56 top-full left-0 w-full px-1 bg-black/60 border border-white/10 backdrop-blur-sm text-white rounded-lg outline-none'
+          className='absolute z-10 mt-2 max-h-fit top-full left-0 w-full px-1 bg-black/30 border border-white/10 backdrop-blur-sm text-white rounded-lg outline-none'
         >
           {options.map((option) => (
             <button
@@ -69,7 +69,7 @@ const Dropdown = ({ id, label, options = [], value, onChange, placeholder = 'Sel
                 onChange && onChange(option)
                 setIsOpen(false)
               }}
-              className={`w-full text-left px-4 py-2 hover:bg-white/5 my-1 rounded-lg gap-2 ${
+              className={`w-full text-left px-4 py-2 hover:bg-white/5 my-1 rounded-lg gap-2 cursor-pointer ${
                 option === value ? 'bg-white/5 border border-white/5' : ''
               }`}
             >
