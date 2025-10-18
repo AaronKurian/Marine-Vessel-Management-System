@@ -15,4 +15,12 @@ export const NavItems = [
         title: "Contact",
         link: "/#footer"
     },
+    {
+        title: "Login",
+        link: "/login"  
+    },
+    {
+      title: "Sign Up",
+      link: "/signup"
+    }
   ];
