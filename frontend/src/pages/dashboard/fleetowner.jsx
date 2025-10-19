@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPlus } from 'react-icons/fa'
 import VesselRow from '../../components/VesselRow'
+import AddVessel from '../../components/fleet/AddVessel'
 import NewVoyage from '../../components/fleet/newvoyage'
 
 const FleetDashboard = () => {
@@ -9,22 +10,25 @@ const FleetDashboard = () => {
   const [ownerId, setOwnerId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [voyageModalOpen, setVoyageModalOpen] = useState(false)
   const [initialCaptains, setInitialCaptains] = useState([])
   const [imoNumber, setImoNumber] = useState('')
   const [vesselName, setVesselName] = useState('')
   const [statusVal, setStatusVal] = useState('At Port')
   const [capacity, setCapacity] = useState('')
   const [captainId, setCaptainId] = useState('')
+  const [voyages, setVoyages] = useState([])
+  const [loadingVoyages, setLoadingVoyages] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
     // Try to read owner id from sessionStorage (set during login)
     try {
       const user = JSON.parse(sessionStorage.getItem('user') || 'null')
-      if (user && user.id)
-      {
+      if (user && user.id) {
         console.log(ownerId);
-         setOwnerId(user.id)
+        setOwnerId(user.id)
+        fetchVoyages(user.id) // Fetch voyages when owner ID is set
       }
     } catch (err) {
       // ignore
@@ -65,6 +69,7 @@ const FleetDashboard = () => {
   useEffect(() => {
     if (!ownerId) return
     fetchVessels()
+    fetchVoyages(ownerId)
   }, [ownerId])
 
   const submitVessel = async (e) => {
@@ -118,15 +123,33 @@ const FleetDashboard = () => {
     }
   }
 
-  // sample voyages data to display in left column (same style as main Dashboard)
-  const voyages = [
-    { id: 1, from: 'COK', to: 'JED', imo: 'IMO 6942096', status: { label: 'Not Departed', color: 'text-red-400' } },
-    { id: 2, from: 'COK', to: 'JED', imo: 'IMO 6942096', status: { label: 'In Transit', color: 'text-emerald-400' } },
-    { id: 3, from: 'COK', to: 'JED', imo: 'IMO 6942096', status: { label: 'Arrived', color: 'text-emerald-400' } },
-    { id: 4, from: 'COK', to: 'JED', imo: 'IMO 6942096', status: { label: 'Not Departed', color: 'text-red-400' } },
-  ]
+  // Fetch voyages for the owner
+  const fetchVoyages = async (ownerId) => {
+    if (!ownerId) return;
+    setLoadingVoyages(true);
+    try {
+      const res = await fetch(`http://localhost:3000/voyages/owner/${ownerId}`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVoyages(data.voyages || []);
+      } else {
+        setVoyages([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch voyages:', err);
+      setVoyages([]);
+    } finally {
+      setLoadingVoyages(false);
+    }
+  };
 
-  const VoyageCard = ({ idx, from, to, imo, status }) => {
+  // Refresh voyages after scheduling a new one
+  const handleVoyageScheduled = () => {
+    fetchVoyages(ownerId);
+    setVoyageModalOpen(false);
+  };
+
+  const VoyageCard = ({ idx, from, to, imo, status, vessel_name }) => {
     return (
       <div className='border-b-2 border-white/50 px-3 py-2 last:border-none'>
         <div className='flex items-center justify-between'>
@@ -142,7 +165,10 @@ const FleetDashboard = () => {
               </div>
               <div className="flex flex-row items-center w-full px-0 mt-1">
                 <div className="flex flex-row items-center flex-1 justify-between gap-2 px-4">
-                  <div className="text-sm text-gray-300">{imo}</div>
+                  <div className="flex flex-col">
+                    <div className="text-sm text-gray-300">{imo}</div>
+                    <div className="text-xs text-gray-400">{vessel_name}</div>
+                  </div>
                   <div className={`text-xs font-semibold ${status.color}`}>{status.label}</div>
                 </div>
               </div>
@@ -165,16 +191,46 @@ const FleetDashboard = () => {
         <div className='w-full lg:w-80'>
           <div className='flex items-center justify-between mb-4'>
             <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Voyages:</h2>
-            <button className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full px-3 py-1 border border-white/10'>
+            <button 
+              onClick={() => setVoyageModalOpen(true)}
+              className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full px-3 py-1 border border-white/10'
+            >
               Schedule
             </button>
           </div>
 
           <div className='rounded-md border border-white/15 bg-[#2f344a]/70 flex flex-col gap-2 max-h-[600px] overflow-y-auto'>
-            {voyages.map((v, i) => (
-              <VoyageCard key={`${v.id}-${i}`} idx={i + 1} {...v} />
-            ))}
+            {loadingVoyages ? (
+              <div className="p-4 text-center text-gray-400">Loading voyages...</div>
+            ) : voyages.length === 0 ? (
+              <div className="p-4 text-center text-gray-400">No voyages scheduled yet.</div>
+            ) : (
+              voyages.map((v, i) => (
+                <VoyageCard 
+                  key={v.id} 
+                  idx={i + 1} 
+                  vessel_name={v.vessel_name}
+                  from={v.from}
+                  to={v.to}
+                  imo={v.imo}
+                  status={v.status}
+                />
+              ))
+            )}
           </div>
+
+          {/* New Voyage Modal */}
+          {voyageModalOpen && (
+            <div className='fixed inset-0 z-50 flex items-center justify-center'>
+              <div className='absolute inset-0 bg-black/60' onClick={() => setVoyageModalOpen(false)} />
+              <div className='relative z-10 w-full max-w-4xl'>
+                <NewVoyage 
+                  onClose={() => setVoyageModalOpen(false)}
+                  onVoyageScheduled={handleVoyageScheduled}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right: Vessels (larger) */}
@@ -219,27 +275,32 @@ const FleetDashboard = () => {
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
           <div className='absolute inset-0 bg-black/60' onClick={() => setModalOpen(false)} />
           <div className='relative z-10 w-full max-w-lg'>
-            <NewVoyage asVesselForm={true} initialData={{ captainOptions: initialCaptains }} onVesselSubmit={async (payload) => {
-              // attach owner id
-              payload.owner_id = ownerId
-              try {
-                const res = await fetch('http://localhost:3000/vessels', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-                })
-                const data = await res.json()
-                if (res.ok && data.success) {
-                  await fetchVessels()
-                  setModalOpen(false)
-                } else {
-                  alert(data.error || 'Failed to add vessel')
+            <AddVessel 
+              onClose={() => setModalOpen(false)}
+              onSubmit={async (vesselData) => {
+                try {
+                  const payload = {
+                    ...vesselData,
+                    owner_id: ownerId
+                  }
+                  const res = await fetch('http://localhost:3000/vessels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                  })
+                  const data = await res.json()
+                  if (res.ok && data.success) {
+                    await fetchVessels()
+                    setModalOpen(false)
+                  } else {
+                    alert(data.error || 'Failed to add vessel')
+                  }
+                } catch (err) {
+                  console.error('Error adding vessel:', err)
+                  alert('Error adding vessel')
                 }
-              } catch (err) {
-                console.error('Error adding vessel:', err)
-                alert('Error adding vessel')
-              }
-            }} />
+              }}
+            />
           </div>
         </div>
       )}

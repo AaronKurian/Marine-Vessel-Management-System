@@ -9,7 +9,7 @@ router.get('/captains', async (req, res) => {
 
   try {
     // case-insensitive match for role containing 'captain'
-    let query = supabase.from('users').select('user_id, id, name, role')
+    let query = supabase.from('users').select('user_id, name, role')
       .ilike('role', '%captain%')
 
     const { data, error } = await query

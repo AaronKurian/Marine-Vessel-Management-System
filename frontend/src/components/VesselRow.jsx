@@ -18,13 +18,13 @@ const VesselRow = ({ idx, imo, name, captain, status }) => {
       <div className='w-6 shrink-0 text-center text-gray-300'>{idx}</div>
       <div className='flex-1'>
         <div className='flex flex-col gap-2'>
-          <div className='flex items-center justify-between gap-8'>
-            <div className='text-gray-100 font-semibold'>{imo}</div>
+          <div className='flex items-center gap-8'>
+            <div className='text-gray-100 font-semibold w-24 shrink-0'>{imo}</div>
             <div className='text-gray-100 flex-1 text-center'>{name}</div>
-            <div className={`font-semibold ${s.color}`}>{s.label}</div>
+            <div className={`font-semibold w-32 shrink-0 text-right ${s.color}`}>{s.label}</div>
           </div>
         </div>
-  <div className='text-gray-300 text-sm'>CAPTAIN : {captain || 'No captain assigned yet'}</div>
+        <div className='text-gray-300 text-sm'>CAPTAIN : {captain || 'No captain assigned yet'}</div>
       </div>
     </div>
   )
