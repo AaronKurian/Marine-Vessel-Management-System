@@ -98,7 +98,6 @@ const AddVessel = ({ onSubmit, onClose }) => {
           >
             <option value="At Port">At Port</option>
             <option value="In Transit">At Sea</option>
-            <option value="Maintenance">Maintenance</option>
           </select>
         </div>
 

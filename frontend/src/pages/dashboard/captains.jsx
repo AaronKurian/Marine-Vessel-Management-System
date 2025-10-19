@@ -21,6 +21,7 @@ const CaptainDashboard = () => {
   // Status options
   const voyageStatusOptions = ['Scheduled', 'Departed', 'In Transit', 'Delayed', 'Arrived'];
   const cargoStatusOptions = ['Picked Up', 'Delivered', 'Delayed'];
+  const vesselStatusOptions = ['At Sea', 'At Port'];
   
   const navigate = useNavigate();
 
@@ -367,15 +368,23 @@ const CaptainDashboard = () => {
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
             <h3 className="text-xl font-semibold text-white mb-4">Update Vessel Status</h3>
             <div className="space-y-4">
-              <button
-                onClick={() => {
-                  updateVesselStatus(selectedVessel.status === 'At Port' ? 'At Sea' : 'At Port');
-                  setShowVesselModal(false);
-                }}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-              >
-                Change to {selectedVessel.status === 'At Port' ? 'At Sea' : 'At Port'}
-              </button>
+              {vesselStatusOptions.map((status) => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    updateVesselStatus(status);
+                    setShowVesselModal(false);
+                  }}
+                  className={`w-full px-4 py-2 rounded transition-colors ${
+                    status === selectedVessel.status
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  disabled={status === selectedVessel.status}
+                >
+                  {status}
+                </button>
+              ))}
               <button
                 onClick={() => setShowVesselModal(false)}
                 className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"

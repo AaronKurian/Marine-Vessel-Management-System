@@ -206,6 +206,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             <option value="Not Departed">Not Departed</option>
             <option value="In Transit">In Transit</option>
             <option value="Arrived">Arrived</option>
+            <option value="Delayed">Delayed</option>
           </select>
         </div>
 
