@@ -52,8 +52,10 @@ router.post("/", async (req, res) => {
       return res.status(500).json({ success: false, error: 'No data returned from Supabase' });
     }
 
-    console.log('User inserted:', data[0]);
-    return res.status(201).json({ success: true, message: 'User created successfully', user: data[0] });
+  console.log('User inserted:', data[0]);
+  const user = data[0];
+  user.id = user.user_id ?? user.id ?? user.user_id;
+  return res.status(201).json({ success: true, message: 'User created successfully', user });
   } catch (err) {
     console.error('Signup catch error:', err);
     return res.status(500).json({ success: false, error: 'Internal server error', details: err.message });

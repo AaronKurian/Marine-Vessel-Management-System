@@ -35,10 +35,13 @@ router.post("/", async (req, res) => {
       });
     }
 
+    const user = data[0] || {};
+   
+
     return res.json({
       success: true,
       message: "User found",
-      user: data[0],
+      user,
     });
   } catch (err) {
     console.error("Login error:", err);

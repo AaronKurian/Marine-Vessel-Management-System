@@ -7,6 +7,9 @@ import Vessel from './components/fleet/vessel'
 import NewVoyage from './components/fleet/newvoyage'
 import EditVoyage from './components/fleet/editvoyage'
 import ApproveVoyage from './components/fleet/approvevoyage'
+import FleetDashboard from './pages/dashboard/fleetowner'
+import TraderDashboard from './pages/dashboard/trader'
+import CaptainDashboard from './pages/dashboard/captains'
 
 function App() {
 
@@ -17,6 +20,9 @@ function App() {
         <Route path="/signin" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
+       <Route path="/dashboard/fleetowner" element={<FleetDashboard />} />
+        <Route path="/dashboard/trader" element={<TraderDashboard />} />
+       <Route path="/dashboard/captains" element={<CaptainDashboard />} />
         <Route path="/vessel" element={<Vessel />} />
         <Route path="/newvoyage" element={<NewVoyage />} />
         <Route path="/editvoyage" element={<EditVoyage />} />
