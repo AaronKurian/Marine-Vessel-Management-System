@@ -8,7 +8,7 @@ const vessels = require('./routes/vessels');
 const users = require('./routes/users');
 const ports = require('./routes/ports');
 const voyages = require('./routes/voyages');
-
+const cargoRequests = require('./routes/cargorequests');
 
 const app = express();
 
@@ -28,7 +28,7 @@ app.use('/vessels', vessels);
 app.use('/users', users);
 app.use('/ports', ports);
 app.use('/voyages', voyages);
-
+app.use('/cargorequests', cargoRequests);
 
 
 const PORT = process.env.PORT || 3000;
