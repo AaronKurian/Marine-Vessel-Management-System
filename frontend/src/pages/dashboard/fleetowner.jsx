@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPlus } from 'react-icons/fa'
-import AddVessel from '../../components/fleet/addvessel'
-import NewVoyage from '../../components/fleet/addvoyage'
+import AddVessel from '../../components/utils/addvessel'
+import NewVoyage from '../../components/utils/addvoyage'
 
 // Helper function moved from VesselRow.jsx
 const normalizeStatus = (status) => {

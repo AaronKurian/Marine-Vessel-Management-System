@@ -8,7 +8,7 @@ import EditVoyage from './components/utils/editvoyage'
 import FleetDashboard from './pages/dashboard/fleetowner'
 import TraderDashboard from './pages/dashboard/trader'
 import CaptainDashboard from './pages/dashboard/captains'
-import AddVessel from './components/fleet/addvessel'
+import AddVessel from './components/utils/addvessel'
 
 function App() {
 
