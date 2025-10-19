@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const  supabase  = require('../utils/supabase')
+const supabase = require('../utils/supabase')
 
 // Get cargo requests for a specific vessel
 router.get('/vessel/:vesselId', async (req, res) => {
@@ -142,7 +142,107 @@ router.get('/owner/:ownerId', async (req, res) => {
   }
 })
 
-// Update cargo request status
+// GET /cargorequests/trader/:traderId - Get cargo requests for a specific trader (NEW)
+router.get('/trader/:traderId', async (req, res) => {
+  try {
+    const { traderId } = req.params;
+
+    const { data: cargoRequests, error } = await supabase
+      .from('cargorequests')
+      .select(`
+        request_id,
+        cargo_manifest,
+        crates_requested,
+        status,
+        created_at,
+        voyages (
+            voyage_id,
+            departure_date,
+            arrival_date,
+            departure_port (port_name),
+            arrival_port (port_name),
+            vessels (
+                vessel_name,
+                imo_number
+            )
+        )
+      `)
+      .eq('trader_id', traderId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase trader cargo select error:', error);
+      throw error;
+    }
+
+    // Simplify the nested response for cleaner frontend consumption
+    const formattedRequests = (cargoRequests || []).map(r => ({
+      request_id: r.request_id,
+      cargo_manifest: r.cargo_manifest,
+      crates_requested: r.crates_requested,
+      status: r.status,
+      created_at: r.created_at,
+      voyage: {
+        id: r.voyages.voyage_id,
+        vessel_name: r.voyages.vessels.vessel_name,
+        imo_number: r.voyages.vessels.imo_number,
+        departure_port: r.voyages.departure_port.port_name,
+        arrival_port: r.voyages.arrival_port.port_name,
+      }
+    }));
+
+    res.json({
+      success: true,
+      cargoRequests: formattedRequests
+    });
+  } catch (err) {
+    console.error('Error fetching trader cargo requests:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trader cargo requests'
+    });
+  }
+});
+
+
+// POST /cargorequests - Create a new cargo request (NEW)
+router.post('/', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  const { voyage_id, trader_id, cargo_manifest, crates_requested } = req.body;
+
+  if (!voyage_id || !trader_id || !cargo_manifest || !crates_requested) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields: voyage_id, trader_id, cargo_manifest, crates_requested'
+    });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('cargorequests')
+      .insert([{
+        voyage_id,
+        trader_id,
+        cargo_manifest,
+        crates_requested,
+        status: 'Pending' // Initial status
+      }])
+      .select();
+
+    if (error) {
+      console.error('Supabase insert cargo request error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to create cargo request', details: error });
+    }
+
+    return res.status(201).json({ success: true, cargoRequest: data[0] });
+  } catch (err) {
+    console.error('Insert cargo request catch error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Update cargo request status (PATCH)
 router.patch('/:requestId/status', async (req, res) => {
   try {
     const { requestId } = req.params
@@ -177,7 +277,7 @@ router.patch('/:requestId/status', async (req, res) => {
   }
 })
 
-// Update cargo request status
+// Update cargo request status (PUT)
 router.put('/:requestId/status', async (req, res) => {
   try {
     const { requestId } = req.params;

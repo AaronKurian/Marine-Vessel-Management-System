@@ -2,6 +2,47 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../utils/supabase');
 
+// GET /voyages/available - Get voyages available for cargo booking (NEW)
+router.get('/available', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  try {
+    // Filter for statuses 'Not Departed' or 'In Transit'
+    const { data: voyages, error } = await supabase
+      .from('voyages')
+      .select(`
+        voyage_id,
+        departure_date,
+        status,
+        vessels (vessel_name, imo_number),
+        departure_port:departure_port(port_name),
+        arrival_port:arrival_port(port_name)
+      `)
+      .in('status', ['Not Departed', 'In Transit'])
+      .order('departure_date', { ascending: true });
+
+    if (error) {
+      console.error('Supabase available voyages select error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to fetch available voyages' });
+    }
+
+    const formattedVoyages = voyages.map(v => ({
+      id: v.voyage_id,
+      departure_date: v.departure_date,
+      status: v.status,
+      vessel_name: v.vessels.vessel_name,
+      imo_number: v.vessels.imo_number,
+      departure_port: v.departure_port.port_name,
+      arrival_port: v.arrival_port.port_name,
+    }));
+
+    return res.json({ success: true, voyages: formattedVoyages });
+  } catch (err) {
+    console.error('Get available voyages error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 // GET /voyages/vessel/:id - Get all voyages for a specific vessel
 router.get('/vessel/:id', async (req, res) => {
   if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
