@@ -3,10 +3,14 @@ import { FaPlus } from 'react-icons/fa'
 import FloatingInput from '../../components/FloatingInput'
 import { useNavigate } from 'react-router-dom'
 
-// Helper to get status color
+// Helper to get status color, consistent with Fleet/Captain Dashboards
 const getStatusColor = (status) => {
+  if (!status) return 'text-gray-400';
   switch (status.toLowerCase()) {
     case 'approved':
+    case 'scheduled':
+    case 'arrived':
+    case 'delivered':
       return 'text-emerald-400'
     case 'pending':
       return 'text-yellow-400'
@@ -15,9 +19,8 @@ const getStatusColor = (status) => {
     case 'in transit':
     case 'departed':
     case 'picked up':
+    case 'at sea':
       return 'text-blue-400'
-    case 'delivered':
-      return 'text-emerald-500'
     default:
       return 'text-gray-400'
   }
@@ -129,6 +132,11 @@ const TraderDashboard = () => {
   const [modalVoyage, setModalVoyage] = useState(null) // Holds voyage data for the modal
   const navigate = useNavigate()
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('user')
+    navigate('/')
+  }
+
   useEffect(() => {
     // 1. Get Trader ID
     try {
@@ -213,7 +221,12 @@ const TraderDashboard = () => {
       
       <div className='flex items-center justify-between'>
         <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Trader Dashboard</div>
-        <button className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'>Logout</button>
+        <button 
+          onClick={handleLogout} 
+          className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
+        >
+          Logout
+        </button>
       </div>
 
       <div className='mt-6 space-y-8'>

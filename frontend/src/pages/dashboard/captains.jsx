@@ -1,6 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Helper to get status color, consistent with TraderDashboard
+const getStatusColor = (status) => {
+  if (!status) return 'text-gray-400';
+  switch (status.toLowerCase()) {
+    case 'arrived':
+    case 'delivered':
+      return 'text-emerald-400';
+    case 'in transit':
+    case 'departed':
+    case 'picked up':
+    case 'at sea':
+      return 'text-blue-400';
+    case 'not departed':
+    case 'delayed':
+    case 'pending':
+      return 'text-yellow-400';
+    case 'at port':
+      return 'text-amber-500';
+    case 'rejected':
+      return 'text-red-500';
+    default:
+      return 'text-gray-400';
+  }
+}
+
 const CaptainDashboard = () => {
   const [vessels, setVessels] = useState([]);
   const [voyages, setVoyages] = useState([]);
@@ -19,11 +44,16 @@ const CaptainDashboard = () => {
   const [selectedCargo, setSelectedCargo] = useState(null);
 
   // Status options
-  const voyageStatusOptions = ['Scheduled', 'Departed', 'In Transit', 'Delayed', 'Arrived'];
+  const voyageStatusOptions = ['Departed', 'In Transit', 'Delayed', 'Arrived'];
   const cargoStatusOptions = ['Picked Up', 'Delivered', 'Delayed'];
   const vesselStatusOptions = ['At Sea', 'At Port'];
   
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('user')
+    navigate('/')
+  }
 
   useEffect(() => {
     fetchCaptainData();
@@ -31,7 +61,11 @@ const CaptainDashboard = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.modal-content')) {
+      // Check if event target is outside the modal content and its trigger buttons
+      if (
+        !event.target.closest('.modal-content') &&
+        !event.target.closest('button[data-modal-trigger]')
+      ) {
         setShowVoyageStatusModal(false);
         setShowCargoStatusModal(false);
         setShowVesselModal(false);
@@ -60,7 +94,9 @@ const CaptainDashboard = () => {
       const res = await fetch(`http://localhost:3000/cargorequests/vessel/${vesselId}`);
       const data = await res.json();
       if (res.ok && data.success) {
-        setCargoRequests(data.cargoRequests || []);
+        // Filter out non-approved cargo (since a captain only manages approved/assigned cargo)
+        const approvedCargo = (data.cargoRequests || []).filter(c => c.status !== 'Pending' && c.status !== 'Rejected');
+        setCargoRequests(approvedCargo);
       }
     } catch (error) {
       console.error('Error fetching cargo requests:', error);
@@ -146,6 +182,7 @@ const CaptainDashboard = () => {
       setVessels(vessels.map(v => 
         v.vessel_id === selectedVessel.vessel_id ? updatedVessel : v
       ));
+      alert(`Vessel status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating vessel status:', error);
       alert('Failed to update vessel status');
@@ -170,6 +207,7 @@ const CaptainDashboard = () => {
         setVoyages(voyages.map(v => 
           v.voyage_id === voyageId ? { ...v, status: newStatus } : v
         ));
+        alert(`Voyage status updated to ${newStatus}`);
       } else {
         throw new Error(data.message || 'Failed to update voyage status');
       }
@@ -197,6 +235,7 @@ const CaptainDashboard = () => {
         setCargoRequests(cargoRequests.map(cargo => 
           cargo.request_id === requestId ? { ...cargo, status: newStatus } : cargo
         ));
+        alert(`Cargo status updated to ${newStatus}`);
       } else {
         throw new Error(data.message || 'Failed to update cargo status');
       }
@@ -217,8 +256,18 @@ const CaptainDashboard = () => {
   return (
     <div className="min-h-screen p-8 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       
+      <div className='flex items-center justify-between'>
+        <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Captain Dashboard</div>
+        <button 
+          onClick={handleLogout} 
+          className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
+        >
+          Logout
+        </button>
+      </div>
+
       {/* My Vessels Section */}
-      <section className="mb-8 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+      <section className="mb-8 mt-6 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold mb-4 text-white">My Vessels</h2>
         {vessels.length > 0 ? (
           <div className="space-y-4">
@@ -239,27 +288,28 @@ const CaptainDashboard = () => {
             
             {selectedVessel && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 border border-gray-700 rounded-lg bg-gray-700/50">
                   <div>
-                    <p className="text-gray-400">Vessel Name</p>
+                    <p className="text-gray-400 text-sm">Vessel Name</p>
                     <p className="font-semibold text-white">{selectedVessel.vessel_name}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400">IMO Number</p>
+                    <p className="text-gray-400 text-sm">IMO Number</p>
                     <p className="font-semibold text-white">{selectedVessel.imo_number}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Capacity</p>
+                    <p className="text-gray-400 text-sm">Capacity</p>
                     <p className="font-semibold text-white">{selectedVessel.capacity} TEU</p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Current Status</p>
-                    <p className="font-semibold text-white">{selectedVessel.status}</p>
+                    <p className="text-gray-400 text-sm">Current Status</p>
+                    <p className={`font-semibold ${getStatusColor(selectedVessel.status)}`}>{selectedVessel.status}</p>
                   </div>
                 </div>
                 <div className="mt-4">
                   <button
                     onClick={() => setShowVesselModal(true)}
+                    data-modal-trigger="vessel"
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                   >
                     Update Vessel Status
@@ -277,8 +327,8 @@ const CaptainDashboard = () => {
       <section className="mb-8 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold mb-4 text-white">My Voyages</h2>
         {voyages.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto rounded-lg border border-gray-700/50">
+            <table className="min-w-full divide-y divide-gray-700/50">
               <thead>
                 <tr className="bg-gray-700">
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Departure Port</th>
@@ -286,24 +336,24 @@ const CaptainDashboard = () => {
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Departure Date</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Arrival Date</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Actions</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-300">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className='divide-y divide-gray-700/30'>
                 {voyages.map((voyage) => (
-                  <tr key={voyage.voyage_id} className="border-t border-gray-700">
+                  <tr key={voyage.voyage_id}>
                     <td className="px-6 py-4 text-gray-300">{voyage.departure_port}</td>
                     <td className="px-6 py-4 text-gray-300">{voyage.arrival_port}</td>
                     <td className="px-6 py-4 text-gray-300">{new Date(voyage.departure_date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-gray-300">{new Date(voyage.arrival_date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-gray-300">{voyage.status}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-gray-300">{voyage.arrival_date ? new Date(voyage.arrival_date).toLocaleDateString() : 'N/A'}</td>
+                    <td className={`px-6 py-4 font-semibold ${getStatusColor(voyage.status)}`}>{voyage.status}</td>
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => {
-                          console.log('Setting voyage:', voyage);
                           setSelectedVoyage(voyage);
                           setShowVoyageStatusModal(true);
                         }}
+                        data-modal-trigger="voyage"
                         className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
                       >
                         Update Status
@@ -315,38 +365,41 @@ const CaptainDashboard = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-400">No voyages scheduled</p>
+          <p className="text-gray-400">No voyages scheduled for this vessel.</p>
         )}
       </section>
 
       {/* Cargo Assigned Section */}
       <section className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
-        <h2 className="text-2xl font-bold mb-4 text-white">Cargo Assigned</h2>
+        <h2 className="text-2xl font-bold mb-4 text-white">Assigned Cargo (Approved)</h2>
         {loadingCargo ? (
-          <p className="text-gray-400">Loading cargo requests...</p>
+          <p className="text-gray-400">Loading assigned cargo requests...</p>
         ) : cargoRequests.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto rounded-lg border border-gray-700/50">
+            <table className="min-w-full divide-y divide-gray-700/50">
               <thead>
                 <tr className="bg-gray-700">
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Request ID</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Cargo Manifest</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Crates Requested</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Crates</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Actions</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-300">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className='divide-y divide-gray-700/30'>
                 {cargoRequests.map((cargo) => (
-                  <tr key={cargo.request_id} className="border-t border-gray-700">
+                  <tr key={cargo.request_id}>
+                    <td className="px-6 py-4 text-gray-300">{cargo.request_id}</td>
                     <td className="px-6 py-4 text-gray-300">{cargo.cargo_manifest}</td>
                     <td className="px-6 py-4 text-gray-300">{cargo.crates_requested}</td>
-                    <td className="px-6 py-4 text-gray-300">{cargo.status}</td>
-                    <td className="px-6 py-4">
+                    <td className={`px-6 py-4 font-semibold ${getStatusColor(cargo.status)}`}>{cargo.status}</td>
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => {
                           setSelectedCargo(cargo);
                           setShowCargoStatusModal(true);
                         }}
+                        data-modal-trigger="cargo"
                         className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
                       >
                         Update Status
@@ -358,7 +411,7 @@ const CaptainDashboard = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-400">No cargo requests assigned</p>
+          <p className="text-gray-400">No approved cargo requests assigned to this vessel's voyages.</p>
         )}
       </section>
 
@@ -366,7 +419,7 @@ const CaptainDashboard = () => {
       {showVesselModal && selectedVessel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
-            <h3 className="text-xl font-semibold text-white mb-4">Update Vessel Status</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">Update Vessel Status: {selectedVessel.vessel_name}</h3>
             <div className="space-y-4">
               {vesselStatusOptions.map((status) => (
                 <button
@@ -375,9 +428,9 @@ const CaptainDashboard = () => {
                     updateVesselStatus(status);
                     setShowVesselModal(false);
                   }}
-                  className={`w-full px-4 py-2 rounded transition-colors ${
+                  className={`w-full px-4 py-2 rounded transition-colors font-medium ${
                     status === selectedVessel.status
-                      ? 'bg-gray-600 text-white'
+                      ? 'bg-gray-600 text-white cursor-default'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                   disabled={status === selectedVessel.status}
@@ -400,7 +453,7 @@ const CaptainDashboard = () => {
       {showVoyageStatusModal && selectedVoyage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
-            <h3 className="text-xl font-semibold text-white mb-4">Update Voyage Status</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">Update Voyage Status: {selectedVoyage.departure_port} to {selectedVoyage.arrival_port}</h3>
             <div className="space-y-4">
               {voyageStatusOptions.map((status) => (
                 <button
@@ -413,9 +466,9 @@ const CaptainDashboard = () => {
                       console.error('Failed to update status:', error);
                     }
                   }}
-                  className={`w-full px-4 py-2 rounded transition-colors ${
+                  className={`w-full px-4 py-2 rounded transition-colors font-medium ${
                     status === selectedVoyage.status
-                      ? 'bg-gray-600 text-white'
+                      ? 'bg-gray-600 text-white cursor-default'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                   disabled={status === selectedVoyage.status}
@@ -434,13 +487,11 @@ const CaptainDashboard = () => {
         </div>
       )}
 
-
-
-            {/* Cargo Status Modal */}
+      {/* Cargo Status Modal */}
       {showCargoStatusModal && selectedCargo && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
-            <h3 className="text-xl font-semibold text-white mb-4">Update Cargo Status</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">Update Cargo Status: Request {selectedCargo.request_id}</h3>
             <div className="space-y-4">
               {cargoStatusOptions.map((status) => (
                 <button
@@ -449,9 +500,9 @@ const CaptainDashboard = () => {
                     updateCargoStatus(selectedCargo.request_id, status);
                     setShowCargoStatusModal(false);
                   }}
-                  className={`w-full px-4 py-2 rounded transition-colors ${
+                  className={`w-full px-4 py-2 rounded transition-colors font-medium ${
                     status === selectedCargo.status
-                      ? 'bg-gray-600 text-white'
+                      ? 'bg-gray-600 text-white cursor-default'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                   disabled={status === selectedCargo.status}

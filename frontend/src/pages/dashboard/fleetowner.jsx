@@ -23,6 +23,11 @@ const FleetDashboard = () => {
   const [loadingRequests, setLoadingRequests] = useState(false)
   const navigate = useNavigate()
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('user')
+    navigate('/')
+  }
+
   const fetchCargoRequests = async (id) => {
     const owner = id ?? ownerId
     if (!owner) return
@@ -52,9 +57,11 @@ const FleetDashboard = () => {
         fetchVoyages(user.id) // Fetch voyages when owner ID is set
         fetchVessels(user.id) // Fetch vessels
         fetchCargoRequests(user.id) // Fetch cargo requests
+      } else {
+        navigate('/signin')
       }
     } catch (err) {
-      // ignore
+      navigate('/signin')
     }
   }, [])
 
@@ -96,26 +103,25 @@ const FleetDashboard = () => {
     fetchCargoRequests(ownerId)
   }, [ownerId])
 
-  const submitVessel = async (e) => {
-    e.preventDefault()
+  const submitVessel = async (vesselData) => {
     const owner = ownerId
     if (!owner) {
       alert('Owner ID missing')
       return
     }
 
-    if (!imoNumber || !vesselName) {
+    if (!vesselData.imo_number || !vesselData.vessel_name) {
       alert('Please enter IMO number and vessel name')
       return
     }
 
     try {
       const payload = {
-        imo_number: imoNumber,
-        vessel_name: vesselName,
-        status: statusVal,
-        capacity: capacity ? Number(capacity) : null,
-        captain_id: captainId ? Number(captainId) : null,
+        imo_number: vesselData.imo_number,
+        vessel_name: vesselData.vessel_name,
+        status: vesselData.status,
+        capacity: vesselData.capacity ? Number(vesselData.capacity) : null,
+        captain_id: vesselData.captain_id ? Number(vesselData.captain_id) : null,
         owner_id: owner
       }
 
@@ -129,11 +135,6 @@ const FleetDashboard = () => {
       if (res.ok && data.success) {
         await fetchVessels()
         setModalOpen(false)
-        setImoNumber('')
-        setVesselName('')
-        setStatusVal('At Port')
-        setCapacity('')
-        setCaptainId('')
       } else {
         alert(data.error || 'Failed to add vessel')
       }
@@ -167,6 +168,28 @@ const FleetDashboard = () => {
   const handleVoyageScheduled = () => {
     fetchVoyages(ownerId)
     setVoyageModalOpen(false)
+  }
+
+  const handleUpdateCargoStatus = async (requestId, newStatus) => {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/cargorequests/${requestId}/status`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        }
+      )
+      if (res.ok) {
+        fetchCargoRequests(ownerId)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update request status')
+      }
+    } catch (err) {
+      console.error('Error updating request:', err)
+      alert('Failed to update request status')
+    }
   }
 
   const VoyageCard = ({ idx, from, to, imo, status, vessel_name }) => {
@@ -203,6 +226,12 @@ const FleetDashboard = () => {
     <div className='min-h-screen bg-[#0b0c1a] text-white px-5 md:px-8 py-5 md:py-8'>
       <div className='flex items-center justify-between'>
         <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Fleet</div>
+        <button 
+          onClick={handleLogout} 
+          className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
+        >
+          Logout
+        </button>
       </div>
 
       <div className='mt-6 flex flex-col lg:flex-row gap-6'>
@@ -311,7 +340,7 @@ const FleetDashboard = () => {
                           request.status === 'Approved' 
                             ? 'text-emerald-400' 
                             : request.status === 'Pending'
-                              ? 'text-red-400'
+                              ? 'text-yellow-400'
                               : 'text-gray-400'
                         }>
                           {request.status}
@@ -321,47 +350,13 @@ const FleetDashboard = () => {
                       {request.status === 'Pending' && (
                         <div className="flex space-x-2 ml-4">
                           <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(
-                                  `http://localhost:3000/cargorequests/${request.request_id}/status`,
-                                  {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'Approved' })
-                                  }
-                                )
-                                if (res.ok) {
-                                  fetchCargoRequests(ownerId)
-                                }
-                              } catch (err) {
-                                console.error('Error updating request:', err)
-                                alert('Failed to update request status')
-                              }
-                            }}
+                            onClick={() => handleUpdateCargoStatus(request.request_id, 'Approved')}
                             className="px-3 py-1 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(
-                                  `http://localhost:3000/cargorequests/${request.request_id}/status`,
-                                  {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'Rejected' })
-                                  }
-                                )
-                                if (res.ok) {
-                                  fetchCargoRequests(ownerId)
-                                }
-                              } catch (err) {
-                                console.error('Error updating request:', err)
-                                alert('Failed to update request status')
-                              }
-                            }}
+                            onClick={() => handleUpdateCargoStatus(request.request_id, 'Rejected')}
                             className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                           >
                             Reject
@@ -397,29 +392,7 @@ const FleetDashboard = () => {
           <div className='relative z-10 w-full max-w-lg'>
             <AddVessel 
               onClose={() => setModalOpen(false)}
-              onSubmit={async (vesselData) => {
-                try {
-                  const payload = {
-                    ...vesselData,
-                    owner_id: ownerId
-                  }
-                  const res = await fetch('http://localhost:3000/vessels', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                  })
-                  const data = await res.json()
-                  if (res.ok && data.success) {
-                    await fetchVessels()
-                    setModalOpen(false)
-                  } else {
-                    alert(data.error || 'Failed to add vessel')
-                  }
-                } catch (err) {
-                  console.error('Error adding vessel:', err)
-                  alert('Error adding vessel')
-                }
-              }}
+              onSubmit={submitVessel}
               initialData={{ captains: initialCaptains }}
             />
           </div>
