@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
 import Auth from './pages/Auth'
 import Landing from './pages/Landing'
-import Vessel from './components/fleet/vessel'
-import NewVoyage from './components/fleet/newvoyage'
-import EditVoyage from './components/fleet/editvoyage'
-import ApproveVoyage from './components/fleet/approvevoyage'
+import AddVessel from './components/utils/addvessel'
+import NewVoyage from './components/utils/addvoyage'
+import EditVoyage from './components/utils/editvoyage'
 import FleetDashboard from './pages/dashboard/fleetowner'
 import TraderDashboard from './pages/dashboard/trader'
 import CaptainDashboard from './pages/dashboard/captains'
+import AddVessel from './components/fleet/addvessel'
 
 function App() {
 
@@ -19,11 +18,10 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
-        <Route path="/dashboard" element={<Dashboard />} />
        <Route path="/dashboard/fleetowner" element={<FleetDashboard />} />
         <Route path="/dashboard/trader" element={<TraderDashboard />} />
        <Route path="/dashboard/captain" element={<CaptainDashboard />} />
-        <Route path="/vessel" element={<Vessel />} />
+        <Route path="/addvessel" element={<AddVessel />} />
         <Route path="/newvoyage" element={<NewVoyage />} />
         <Route path="/editvoyage" element={<EditVoyage />} />
         <Route path="/approvevoyage" element={<ApproveVoyage />} />
