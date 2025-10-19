@@ -2,6 +2,54 @@ const express = require('express')
 const router = express.Router()
 const  supabase  = require('../utils/supabase')
 
+// Get cargo requests for a specific vessel
+router.get('/vessel/:vesselId', async (req, res) => {
+  try {
+    const { vesselId } = req.params;
+
+    const { data: voyages, error: voyagesError } = await supabase
+      .from('voyages')
+      .select(`
+        voyage_id,
+        cargorequests (
+          request_id,
+          cargo_manifest,
+          crates_requested,
+          status,
+          created_at
+        )
+      `)
+      .eq('vessel_id', vesselId);
+
+    if (voyagesError) {
+      console.error('Voyages fetch error:', voyagesError);
+      throw voyagesError;
+    }
+
+    // Transform the nested data into a flat cargo requests array
+    const cargoRequests = voyages.flatMap(voyage => 
+      voyage.cargorequests?.map(request => ({
+        ...request,
+        voyage_id: voyage.voyage_id
+      })) || []
+    );
+
+    // Sort by created_at descending (most recent first)
+    cargoRequests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json({
+      success: true,
+      cargoRequests
+    });
+  } catch (err) {
+    console.error('Error fetching cargo requests:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch cargo requests'
+    });
+  }
+});
+
 // Get cargo requests for fleet owner's vessels
 router.get('/owner/:ownerId', async (req, res) => {
   try {
@@ -100,7 +148,7 @@ router.patch('/:requestId/status', async (req, res) => {
     const { requestId } = req.params
     const { status } = req.body
 
-    if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+    if (!['Pending', 'Approved', 'Rejected', 'Picked Up', 'In Transit', 'Delivered'].includes(status)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid status'
@@ -128,5 +176,40 @@ router.patch('/:requestId/status', async (req, res) => {
     })
   }
 })
+
+// Update cargo request status
+router.put('/:requestId/status', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { status } = req.body;
+    
+    if (!status || !['Picked Up', 'Delivered', 'Delayed'].includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid status. Must be one of: Picked Up, Delivered, Delayed' 
+      });
+    }
+
+    const { data, error } = await supabase
+      .from('cargorequests')
+      .update({ status })
+      .eq('request_id', requestId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      cargoRequest: data
+    });
+  } catch (error) {
+    console.error('Error updating cargo status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update cargo status'
+    });
+  }
+});
 
 module.exports = router

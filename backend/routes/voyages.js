@@ -2,6 +2,80 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../utils/supabase');
 
+// GET /voyages/vessel/:id - Get all voyages for a specific vessel
+router.get('/vessel/:id', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  try {
+    const { data: voyages, error } = await supabase
+      .from('voyages')
+      .select(`
+        *,
+        departure_port:departure_port(port_name),
+        arrival_port:arrival_port(port_name)
+      `)
+      .eq('vessel_id', req.params.id)
+      .order('departure_date', { ascending: true });
+
+    if (error) {
+      console.error('Supabase voyages select error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to fetch voyages' });
+    }
+
+    const formattedVoyages = voyages.map(v => ({
+      ...v,
+      departure_port: v.departure_port.port_name,
+      arrival_port: v.arrival_port.port_name
+    }));
+
+    return res.json({ success: true, voyages: formattedVoyages });
+  } catch (err) {
+    console.error('Get voyages error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// PUT /voyages/:id/status - Update voyage status
+router.put('/:id/status', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  const { status } = req.body;
+  const voyageId = req.params.id;
+
+  if (!status || !['Scheduled', 'In Transit', 'Arrived', 'Delayed', 'Departed'].includes(status)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid status. Must be one of: Scheduled, In Transit, Arrived, Delayed, Departed' 
+    });
+  }
+
+  try {
+    const { data: voyage, error } = await supabase
+      .from('voyages')
+      .update({ status })
+      .eq('voyage_id', voyageId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase update voyage error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to update voyage status' });
+    }
+
+    if (!voyage) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Voyage not found' 
+      });
+    }
+
+    return res.json({ success: true, voyage });
+  } catch (err) {
+    console.error('Update voyage status error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 // GET /voyages/owner/:ownerId - Get all voyages for vessels owned by an owner
 router.get('/owner/:ownerId', async (req, res) => {
   if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });

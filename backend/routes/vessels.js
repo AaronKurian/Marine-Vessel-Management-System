@@ -1,7 +1,76 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../utils/supabase');
-const { cp } = require('fs');
+
+// GET /vessels/captain/:id - Get vessel details for a captain
+router.get('/captain/:id', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  try {
+    const { data: vessels, error } = await supabase
+      .from('vessels')
+      .select('*')
+      .eq('captain_id', req.params.id);
+
+    if (error) {
+      console.error('Supabase vessel select error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to fetch vessel data' });
+    }
+
+    if (!vessels || vessels.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No vessels found for this captain' 
+      });
+    }
+
+    return res.json({ success: true, vessels });
+  } catch (err) {
+    console.error('Get vessel error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// PUT /vessels/:id/status - Update vessel status
+router.put('/:id/status', async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: 'Supabase client not configured' });
+
+  const { status } = req.body;
+  const vesselId = req.params.id;
+
+  if (!status || !['At Port', 'At Sea'].includes(status)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid status. Must be either "At Port" or "At Sea"' 
+    });
+  }
+
+  try {
+    const { data: vessel, error } = await supabase
+      .from('vessels')
+      .update({ status })
+      .eq('vessel_id', vesselId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase update vessel error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to update vessel status' });
+    }
+
+    if (!vessel) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Vessel not found' 
+      });
+    }
+
+    return res.json({ success: true, vessel });
+  } catch (err) {
+    console.error('Update vessel status error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
 // GET /vessels/owner/:ownerId
 router.get('/owner/:ownerId', async (req, res) => {
