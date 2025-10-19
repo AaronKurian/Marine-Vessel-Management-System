@@ -203,15 +203,6 @@ const FleetDashboard = () => {
     <div className='min-h-screen bg-[#0b0c1a] text-white px-5 md:px-8 py-5 md:py-8'>
       <div className='flex items-center justify-between'>
         <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Fleet</div>
-        <button
-          onClick={() => {
-            sessionStorage.removeItem('user')
-            navigate('/auth')
-          }}
-          className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
-        >
-          Logout
-        </button>
       </div>
 
       <div className='mt-6 flex flex-col lg:flex-row gap-6'>

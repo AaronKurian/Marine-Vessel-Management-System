@@ -1,13 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const { supabase } = require('../utils/supabase')
+const  supabase  = require('../utils/supabase')
 
 // Get cargo requests for fleet owner's vessels
 router.get('/owner/:ownerId', async (req, res) => {
   try {
     const { ownerId } = req.params
 
-    // First get all vessels owned by this owner
+    // Fetch vessels with nested voyages and cargo requests, including port details
     const { data: vessels, error: vesselError } = await supabase
       .from('vessels')
       .select(`
@@ -16,13 +16,22 @@ router.get('/owner/:ownerId', async (req, res) => {
         imo_number,
         voyages (
           voyage_id,
-          departure_port,
-          arrival_port,
           departure_date,
           arrival_date,
           status,
+          departure:departure_port (
+            port_id,
+            port_name,
+            country
+          ),
+          arrival:arrival_port (
+            port_id,
+            port_name,
+            country
+          ),
           cargorequests (
             request_id,
+            trader_id,
             cargo_manifest,
             crates_requested,
             status,
@@ -32,7 +41,10 @@ router.get('/owner/:ownerId', async (req, res) => {
       `)
       .eq('owner_id', ownerId)
 
-    if (vesselError) throw vesselError
+    if (vesselError) {
+      console.error('Vessel fetch error:', vesselError)
+      throw vesselError
+    }
 
     if (!vessels || vessels.length === 0) {
       return res.json({ success: true, cargoRequests: [] })
@@ -43,6 +55,7 @@ router.get('/owner/:ownerId', async (req, res) => {
       vessel.voyages?.flatMap(voyage => 
         voyage.cargorequests?.map(request => ({
           request_id: request.request_id,
+          trader_id: request.trader_id,
           vessel_id: vessel.vessel_id,
           vessels: {
             vessel_name: vessel.vessel_name,
@@ -50,8 +63,8 @@ router.get('/owner/:ownerId', async (req, res) => {
           },
           voyage_id: voyage.voyage_id,
           voyages: {
-            departure_port: voyage.departure_port,
-            arrival_port: voyage.arrival_port,
+            departure_port: voyage.departure?.port_name || 'Unknown',
+            arrival_port: voyage.arrival?.port_name || 'Unknown',
             departure_date: voyage.departure_date,
             arrival_date: voyage.arrival_date,
             status: voyage.status
@@ -60,22 +73,23 @@ router.get('/owner/:ownerId', async (req, res) => {
           crates_requested: request.crates_requested,
           status: request.status,
           created_at: request.created_at
-        }))
+        })) || []
       ) || []
-    ) || []
-      .order('created_at', { ascending: false })
+    )
 
-    if (requestError) throw requestError
+    // Sort by created_at descending (most recent first)
+    cargoRequests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
     res.json({
       success: true,
-      cargoRequests: cargoRequests || []
+      cargoRequests: cargoRequests
     })
   } catch (err) {
     console.error('Error fetching cargo requests:', err)
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch cargo requests'
+      error: 'Failed to fetch cargo requests',
+      details: err.message
     })
   }
 })
