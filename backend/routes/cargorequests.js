@@ -177,4 +177,39 @@ router.patch('/:requestId/status', async (req, res) => {
   }
 })
 
+// Update cargo request status
+router.put('/:requestId/status', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { status } = req.body;
+    
+    if (!status || !['Picked Up', 'Delivered', 'Delayed'].includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid status. Must be one of: Picked Up, Delivered, Delayed' 
+      });
+    }
+
+    const { data, error } = await supabase
+      .from('cargorequests')
+      .update({ status })
+      .eq('request_id', requestId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      cargoRequest: data
+    });
+  } catch (error) {
+    console.error('Error updating cargo status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update cargo status'
+    });
+  }
+});
+
 module.exports = router

@@ -3,15 +3,54 @@ import { useNavigate } from 'react-router-dom';
 
 const CaptainDashboard = () => {
   const [vessels, setVessels] = useState([]);
-  const [selectedVessel, setSelectedVessel] = useState(null);
   const [voyages, setVoyages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [cargoRequests, setCargoRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [loadingCargo, setLoadingCargo] = useState(false);
+  
+  // Modal states
+  const [showVesselModal, setShowVesselModal] = useState(false);
+  const [showVoyageStatusModal, setShowVoyageStatusModal] = useState(false);
+  const [showCargoStatusModal, setShowCargoStatusModal] = useState(false);
+  
+  // Selected item states
+  const [selectedVessel, setSelectedVessel] = useState(null);
+  const [selectedVoyage, setSelectedVoyage] = useState(null);
+  const [selectedCargo, setSelectedCargo] = useState(null);
+
+  // Status options
+  const voyageStatusOptions = ['Scheduled', 'Departed', 'In Transit', 'Delayed', 'Arrived'];
+  const cargoStatusOptions = ['Picked Up', 'Delivered', 'Delayed'];
+  
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCaptainData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.modal-content')) {
+        setShowVoyageStatusModal(false);
+        setShowCargoStatusModal(false);
+        setShowVesselModal(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setShowVoyageStatusModal(false);
+        setShowCargoStatusModal(false);
+        setShowVesselModal(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   const fetchCargoRequests = async (vesselId) => {
@@ -89,6 +128,7 @@ const CaptainDashboard = () => {
   };
 
   const updateVesselStatus = async (newStatus) => {
+    if (!selectedVessel) return;
     try {
       const response = await fetch(`http://localhost:3000/vessels/${selectedVessel.vessel_id}/status`, {
         method: 'PUT',
@@ -121,10 +161,17 @@ const CaptainDashboard = () => {
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!response.ok) throw new Error('Failed to update voyage status');
-      setVoyages(voyages.map(v => 
-        v.voyage_id === voyageId ? { ...v, status: newStatus } : v
-      ));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update voyage status');
+      
+      // Only update the state if the update was successful
+      if (data.success) {
+        setVoyages(voyages.map(v => 
+          v.voyage_id === voyageId ? { ...v, status: newStatus } : v
+        ));
+      } else {
+        throw new Error(data.message || 'Failed to update voyage status');
+      }
     } catch (error) {
       console.error('Error updating voyage status:', error);
       alert('Failed to update voyage status');
@@ -141,11 +188,17 @@ const CaptainDashboard = () => {
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!response.ok) throw new Error('Failed to update cargo status');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update cargo status');
       
-      setCargoRequests(cargoRequests.map(cargo => 
-        cargo.request_id === requestId ? { ...cargo, status: newStatus } : cargo
-      ));
+      // Only update the state if the update was successful
+      if (data.success) {
+        setCargoRequests(cargoRequests.map(cargo => 
+          cargo.request_id === requestId ? { ...cargo, status: newStatus } : cargo
+        ));
+      } else {
+        throw new Error(data.message || 'Failed to update cargo status');
+      }
     } catch (error) {
       console.error('Error updating cargo status:', error);
       alert('Failed to update cargo status');
@@ -162,6 +215,7 @@ const CaptainDashboard = () => {
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      
       {/* My Vessels Section */}
       <section className="mb-8 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold mb-4 text-white">My Vessels</h2>
@@ -204,7 +258,7 @@ const CaptainDashboard = () => {
                 </div>
                 <div className="mt-4">
                   <button
-                    onClick={() => updateVesselStatus(selectedVessel.status === 'At Port' ? 'At Sea' : 'At Port')}
+                    onClick={() => setShowVesselModal(true)}
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                   >
                     Update Vessel Status
@@ -226,7 +280,6 @@ const CaptainDashboard = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-700">
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Voyage ID</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Departure Port</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Arrival Port</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Departure Date</th>
@@ -238,7 +291,6 @@ const CaptainDashboard = () => {
               <tbody>
                 {voyages.map((voyage) => (
                   <tr key={voyage.voyage_id} className="border-t border-gray-700">
-                    <td className="px-6 py-4 text-gray-300">{voyage.voyage_id}</td>
                     <td className="px-6 py-4 text-gray-300">{voyage.departure_port}</td>
                     <td className="px-6 py-4 text-gray-300">{voyage.arrival_port}</td>
                     <td className="px-6 py-4 text-gray-300">{new Date(voyage.departure_date).toLocaleDateString()}</td>
@@ -247,16 +299,11 @@ const CaptainDashboard = () => {
                     <td className="px-6 py-4">
                       <button
                         onClick={() => {
-                          const nextStatus = {
-                            'Scheduled': 'In Transit',
-                            'In Transit': 'Arrived',
-                          }[voyage.status];
-                          if (nextStatus) {
-                            updateVoyageStatus(voyage.voyage_id, nextStatus);
-                          }
+                          console.log('Setting voyage:', voyage);
+                          setSelectedVoyage(voyage);
+                          setShowVoyageStatusModal(true);
                         }}
                         className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                        disabled={voyage.status === 'Arrived' || voyage.status === 'Delayed'}
                       >
                         Update Status
                       </button>
@@ -294,22 +341,15 @@ const CaptainDashboard = () => {
                     <td className="px-6 py-4 text-gray-300">{cargo.crates_requested}</td>
                     <td className="px-6 py-4 text-gray-300">{cargo.status}</td>
                     <td className="px-6 py-4">
-                      {cargo.status === 'Pending' && (
-                        <button
-                          onClick={() => updateCargoStatus(cargo.request_id, 'Picked Up')}
-                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors mr-2"
-                        >
-                          Confirm Pickup
-                        </button>
-                      )}
-                      {cargo.status === 'In Transit' && (
-                        <button
-                          onClick={() => updateCargoStatus(cargo.request_id, 'Delivered')}
-                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                        >
-                          Mark Delivered
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedCargo(cargo);
+                          setShowCargoStatusModal(true);
+                        }}
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        Update Status
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -320,6 +360,106 @@ const CaptainDashboard = () => {
           <p className="text-gray-400">No cargo requests assigned</p>
         )}
       </section>
+
+      {/* Vessel Status Modal */}
+      {showVesselModal && selectedVessel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
+            <h3 className="text-xl font-semibold text-white mb-4">Update Vessel Status</h3>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  updateVesselStatus(selectedVessel.status === 'At Port' ? 'At Sea' : 'At Port');
+                  setShowVesselModal(false);
+                }}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+              >
+                Change to {selectedVessel.status === 'At Port' ? 'At Sea' : 'At Port'}
+              </button>
+              <button
+                onClick={() => setShowVesselModal(false)}
+                className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Voyage Status Modal */}
+      {showVoyageStatusModal && selectedVoyage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
+            <h3 className="text-xl font-semibold text-white mb-4">Update Voyage Status</h3>
+            <div className="space-y-4">
+              {voyageStatusOptions.map((status) => (
+                <button
+                  key={status}
+                  onClick={async () => {
+                    try {
+                      await updateVoyageStatus(selectedVoyage.voyage_id, status);
+                      setShowVoyageStatusModal(false);
+                    } catch (error) {
+                      console.error('Failed to update status:', error);
+                    }
+                  }}
+                  className={`w-full px-4 py-2 rounded transition-colors ${
+                    status === selectedVoyage.status
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  disabled={status === selectedVoyage.status}
+                >
+                  {status}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowVoyageStatusModal(false)}
+                className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+            {/* Cargo Status Modal */}
+      {showCargoStatusModal && selectedCargo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full modal-content">
+            <h3 className="text-xl font-semibold text-white mb-4">Update Cargo Status</h3>
+            <div className="space-y-4">
+              {cargoStatusOptions.map((status) => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    updateCargoStatus(selectedCargo.request_id, status);
+                    setShowCargoStatusModal(false);
+                  }}
+                  className={`w-full px-4 py-2 rounded transition-colors ${
+                    status === selectedCargo.status
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  disabled={status === selectedCargo.status}
+                >
+                  {status}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowCargoStatusModal(false)}
+                className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

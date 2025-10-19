@@ -42,10 +42,10 @@ router.put('/:id/status', async (req, res) => {
   const { status } = req.body;
   const voyageId = req.params.id;
 
-  if (!status || !['Scheduled', 'In Transit', 'Arrived', 'Delayed'].includes(status)) {
+  if (!status || !['Scheduled', 'In Transit', 'Arrived', 'Delayed', 'Departed'].includes(status)) {
     return res.status(400).json({ 
       success: false, 
-      message: 'Invalid status. Must be one of: Scheduled, In Transit, Arrived, Delayed' 
+      message: 'Invalid status. Must be one of: Scheduled, In Transit, Arrived, Delayed, Departed' 
     });
   }
 
