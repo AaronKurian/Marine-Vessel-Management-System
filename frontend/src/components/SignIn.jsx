@@ -50,7 +50,7 @@ const SignIn = () => {
           if (roleKey.includes('fleet')) {
             navigate('/dashboard/fleetowner');
           } else if (roleKey.includes('captain')) {
-            navigate('/dashboard/captains');
+            navigate('/dashboard/captain');
           } else if (roleKey.includes('trader')) {
             navigate('/dashboard/trader');
           } else {

@@ -22,7 +22,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
        <Route path="/dashboard/fleetowner" element={<FleetDashboard />} />
         <Route path="/dashboard/trader" element={<TraderDashboard />} />
-       <Route path="/dashboard/captains" element={<CaptainDashboard />} />
+       <Route path="/dashboard/captain" element={<CaptainDashboard />} />
         <Route path="/vessel" element={<Vessel />} />
         <Route path="/newvoyage" element={<NewVoyage />} />
         <Route path="/editvoyage" element={<EditVoyage />} />
