@@ -17,7 +17,7 @@ export const NavItems = [
     },
     {
         title: "Login",
-        link: "/singin"  
+        link: "/signin"  
     },
     {
       title: "Sign Up",

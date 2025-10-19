@@ -33,17 +33,30 @@ const SignIn = () => {
         // Verify password matches (basic check - in production use hashed passwords)
         if (data.user.password === password) {
           alert(`Welcome back, ${data.user.name}!`);
-          
+
+
           // Store user data in sessionStorage for use across the app
-          sessionStorage.setItem('user', JSON.stringify({
-            id: data.user.id,
+          // normalize id field if backend returned user_id
+          const userObj = {
+            id: data.user.user_id ,
             name: data.user.name,
             email: data.user.email,
             role: data.user.role
-          }));
-          
-          // Redirect to dashboard
-          navigate('/dashboard');
+          };
+          sessionStorage.setItem('user', JSON.stringify(userObj));
+
+          // Redirect based on role
+          const roleKey = String(data.user.role || '').toLowerCase();
+          if (roleKey.includes('fleet')) {
+            navigate('/dashboard/fleetowner');
+          } else if (roleKey.includes('captain')) {
+            navigate('/dashboard/captains');
+          } else if (roleKey.includes('trader')) {
+            navigate('/dashboard/trader');
+          } else {
+            // Fallback
+            navigate('/dashboard');
+          }
         } else {
           alert('Incorrect password. Please try again.');
         }

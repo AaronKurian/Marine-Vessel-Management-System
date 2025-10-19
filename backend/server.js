@@ -4,6 +4,9 @@ const cors = require("cors");
 // Import routes
 const signup = require("./routes/auth/signup");
 const login = require("./routes/auth/login.js");
+const vessels = require('./routes/vessels');
+const users = require('./routes/users');
+const voyages = require('./routes/voyages');
 
 const app = express();
 
@@ -19,6 +22,9 @@ app.get("/", (req, res) => {
 // Use routes
 app.use("/signup", signup);
 app.use("/login", login);
+app.use('/vessels', vessels);
+app.use('/users', users);
+app.use('/voyages', voyages);
 
 
 const PORT = process.env.PORT || 3000;
