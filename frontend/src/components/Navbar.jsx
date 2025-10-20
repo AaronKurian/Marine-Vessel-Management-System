@@ -84,7 +84,7 @@ const Navbar = () => {
         ))}
         <Link
           to="/signin"
-          className="px-6 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors font-medium"
+          className="px-6 py-2 bg-indigo-900/80 hover:bg-indigo-700 text-white rounded-full border border-white/10 transition-colors font-medium"
           onClick={() => setmobilenav(false)}
         >
           Login
@@ -93,7 +93,7 @@ const Navbar = () => {
 
       <Link
         to="/signin"
-        className="hidden lg:block px-6 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors font-medium"
+        className="hidden lg:block px-6 py-2 bg-indigo-900/80 hover:bg-indigo-700 text-white rounded-full border border-white/10 transition-colors font-medium"
       >
         Login
       </Link>
