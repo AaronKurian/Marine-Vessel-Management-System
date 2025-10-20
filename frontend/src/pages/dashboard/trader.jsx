@@ -3,6 +3,7 @@ import { FaPlus } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import FloatingInput from '../../components/FloatingInput'
 import { useNavigate } from 'react-router-dom'
+import API_BASE_URL from '../../config/api'
 
 // Helper to get status color, consistent with Fleet/Captain Dashboards
 const getStatusColor = (status) => {
@@ -54,7 +55,7 @@ const NewCargoRequestModal = ({ voyage, traderId, onClose, onSuccess }) => {
         crates_requested: Number(cratesRequested),
       }
 
-      const res = await fetch('http://localhost:3000/cargorequests', {
+      const res = await fetch(`${API_BASE_URL}/cargorequests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -174,7 +175,7 @@ const TraderDashboard = () => {
   const fetchAvailableVoyages = async () => {
     setLoadingVoyages(true);
     try {
-      const res = await fetch('http://localhost:3000/voyages/available');
+      const res = await fetch(`${API_BASE_URL}/voyages/available`);
       const data = await res.json();
       if (res.ok && data.success) {
         // Filter: Keep only 'Not Departed' and 'In Transit'
@@ -197,7 +198,7 @@ const TraderDashboard = () => {
     if (!id) return;
     setLoadingRequests(true);
     try {
-      const res = await fetch(`http://localhost:3000/cargorequests/trader/${id}`);
+      const res = await fetch(`${API_BASE_URL}/cargorequests/trader/${id}`);
       const data = await res.json();
       if (res.ok && data.success) {
         setMyCargoRequests(data.cargoRequests || []);

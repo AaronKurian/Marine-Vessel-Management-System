@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import API_BASE_URL from '../../config/api'
 
 const NewVoyage = ({ onClose, onVoyageScheduled }) => {
   const [departurePort, setDeparturePort] = useState('')
@@ -26,8 +27,8 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
 
         // Fetch ports and vessels in parallel
         const [portRes, vesselRes] = await Promise.all([
-          fetch('http://localhost:3000/ports'),
-          fetch(`http://localhost:3000/vessels/owner/${user.id}`)
+          fetch(`${API_BASE_URL}/ports`),
+          fetch(`${API_BASE_URL}/vessels/owner/${user.id}`)
         ])
 
         const [portData, vesselData] = await Promise.all([
@@ -71,7 +72,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
         status
       }
 
-      const res = await fetch('http://localhost:3000/voyages', {
+      const res = await fetch(`${API_BASE_URL}/voyages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

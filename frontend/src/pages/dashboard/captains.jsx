@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import API_BASE_URL from '../../config/api';
 
 // Helper to get status color, consistent with TraderDashboard
 const getStatusColor = (status) => {
@@ -96,7 +97,7 @@ const CaptainDashboard = () => {
       const user = JSON.parse(userString);
 
       // Fetch all vessels for this captain
-      const vesselsRes = await fetch(`http://localhost:3000/vessels/captain/${user.id}`);
+      const vesselsRes = await fetch(`${API_BASE_URL}/vessels/captain/${user.id}`);
       if (!vesselsRes.ok) throw new Error('Failed to fetch vessels data');
       const vesselsResponse = await vesselsRes.json();
       
@@ -105,12 +106,12 @@ const CaptainDashboard = () => {
         const vesselDataPromises = vesselsResponse.vessels.map(async (vessel) => {
           try {
             // Fetch voyages for this vessel
-            const voyagesRes = await fetch(`http://localhost:3000/voyages/vessel/${vessel.vessel_id}`);
+            const voyagesRes = await fetch(`${API_BASE_URL}/voyages/vessel/${vessel.vessel_id}`);
             const voyagesData = await voyagesRes.json();
             const voyages = voyagesData.success ? voyagesData.voyages || [] : [];
 
             // Fetch cargo for this vessel
-            const cargoRes = await fetch(`http://localhost:3000/cargorequests/vessel/${vessel.vessel_id}`);
+            const cargoRes = await fetch(`${API_BASE_URL}/cargorequests/vessel/${vessel.vessel_id}`);
             const cargoData = await cargoRes.json();
             const cargo = cargoData.success 
               ? (cargoData.cargoRequests || []).filter(c => c.status !== 'Pending' && c.status !== 'Rejected')
@@ -144,7 +145,7 @@ const CaptainDashboard = () => {
 
   const updateVesselStatus = async (newStatus, vesselId) => {
     try {
-      const response = await fetch(`http://localhost:3000/vessels/${vesselId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/vessels/${vesselId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +176,7 @@ const CaptainDashboard = () => {
 
   const updateVoyageStatus = async (voyageId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:3000/voyages/${voyageId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/voyages/${voyageId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -213,7 +214,7 @@ const CaptainDashboard = () => {
 
   const updateCargoStatus = async (requestId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:3000/cargorequests/${requestId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/cargorequests/${requestId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

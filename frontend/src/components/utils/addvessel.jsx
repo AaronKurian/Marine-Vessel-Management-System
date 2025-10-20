@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../../config/api';
 
 const AddVessel = ({ onSubmit, onClose }) => {
   const [vesselData, setVesselData] = useState({
@@ -18,7 +19,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
   const fetchCaptains = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/users/captains');
+      const res = await fetch(`${API_BASE_URL}/users/captains`);
       const data = await res.json();
       if (res.ok && data.success) {
         setCaptains(data.users || []);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import FloatingInput from './FloatingInput'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import API_BASE_URL from '../config/api'
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/login', {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

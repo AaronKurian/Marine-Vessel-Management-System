@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import AddVessel from '../../components/utils/addvessel'
 import NewVoyage from '../../components/utils/addvoyage'
 import CargoRequests from '../../components/utils/addcargo'
+import API_BASE_URL from '../../config/api'
 
 // Helper function moved from VesselRow.jsx
 const normalizeStatus = (status) => {
@@ -63,7 +64,7 @@ const FleetDashboard = () => {
     if (!owner) return
     setLoadingRequests(true)
     try {
-      const res = await fetch(`http://localhost:3000/cargorequests/owner/${owner}`)
+      const res = await fetch(`${API_BASE_URL}/cargorequests/owner/${owner}`)
       const data = await res.json()
       if (res.ok && data.success) {
         setCargoRequests(data.cargoRequests || [])
@@ -100,7 +101,7 @@ const FleetDashboard = () => {
     if (!owner) return
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:3000/vessels/owner/${owner}`)
+      const res = await fetch(`${API_BASE_URL}/vessels/owner/${owner}`)
       const data = await res.json()
       if (res.ok && data.success) setVessels(data.vessels || [])
       else setVessels([])
@@ -114,7 +115,7 @@ const FleetDashboard = () => {
 
   const fetchCaptains = async (excludeId) => {
     try {
-      const url = new URL('http://localhost:3000/users/captains')
+      const url = new URL(`${API_BASE_URL}/users/captains`)
       if (excludeId) url.searchParams.set('excludeId', excludeId)
       const res = await fetch(url.toString())
       const data = await res.json()
@@ -161,7 +162,7 @@ const FleetDashboard = () => {
         owner_id: owner
       }
 
-      const res = await fetch('http://localhost:3000/vessels', {
+      const res = await fetch(`${API_BASE_URL}/vessels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -195,7 +196,7 @@ const FleetDashboard = () => {
     if (!ownerId) return
     setLoadingVoyages(true)
     try {
-      const res = await fetch(`http://localhost:3000/voyages/owner/${ownerId}`)
+      const res = await fetch(`${API_BASE_URL}/voyages/owner/${ownerId}`)
       const data = await res.json()
       if (res.ok && data.success) {
         setVoyages(data.voyages || [])
@@ -219,7 +220,7 @@ const FleetDashboard = () => {
   const handleUpdateCargoStatus = async (requestId, newStatus) => {
     try {
       const res = await fetch(
-        `http://localhost:3000/cargorequests/${requestId}/status`,
+        `${API_BASE_URL}/cargorequests/${requestId}/status`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

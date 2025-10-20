@@ -4,6 +4,7 @@ import FloatingInput from './FloatingInput'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import Dropdown from './Dropdown'
 import { useNavigate } from 'react-router-dom'
+import API_BASE_URL from '../config/api'
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/signup', {
+      const res = await fetch(`${API_BASE_URL}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role })
