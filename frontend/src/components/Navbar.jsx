@@ -29,7 +29,7 @@ const Navbar = () => {
 
   return (
     <div
-      className={`w-screen text-white max-h-[90px] h-full flex flex-row items-center justify-between max-lg:pl-3 lg:justify-center lg:px-[3.5rem] fixed top-0 z-[999] transition-all duration-300 ${
+      className={`w-screen text-white max-h-[90px] h-full flex flex-row items-center justify-between max-lg:pl-3 lg:px-[3.5rem] fixed top-0 z-[999] transition-all duration-300 ${
         scrolled ? "bg-gray-900/[.5] backdrop-blur" : "bg-transparent"
       }`}
     >
@@ -37,7 +37,7 @@ const Navbar = () => {
         href="/" 
         title="MVMS"
         aria-label="MVMS Website"
-        className="mr-10 mt-2"
+        className="mt-2 z-10"
       >
         <p className="text-2xl font-bold">MVMS</p>
       </a>
@@ -53,24 +53,51 @@ const Navbar = () => {
         )}
       </button>
 
+      <div className="hidden lg:flex lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:flex-row lg:items-center lg:gap-8 text-[#FAFAFA]/[.62] font-satoshi font-bold">
+        {NavItems.map((item, index) => (
+          <a
+            key={index}
+            href={item.link}
+            className="font-satoshi text-lg hover:bg-gradient-to-r hover:from-[#4712b8] hover:to-[#309ff4] hover:bg-clip-text hover:text-xl hover:text-transparent group transition-all duration-300 ease-in-out"
+          >
+            {item.title}
+          </a>
+        ))}
+      </div>
+
       <div
-        className={`text-[#FAFAFA]/[.62] transition-all duration-300 ease-in-out font-satoshi font-bold lg:static lg:w-max lg:h-max lg:pt-0 lg:bg-transparent lg:block  fixed top-0 w-screen h-screen z-[-1] text-center items-center ${
+        className={`lg:hidden text-[#FAFAFA]/[.62] transition-all duration-300 ease-in-out font-satoshi font-bold fixed top-0 w-screen h-screen z-[-1] text-center flex flex-col items-center ${
           mobilenav
-            ? "right-0 flex flex-col gap-[50px] bg-gray-900/[.7] backdrop-blur pt-24"
-            : "right-full flex flex-col gap-8 text-opacity-0"
+            ? "right-0 gap-[50px] bg-gray-900/[.7] backdrop-blur pt-24"
+            : "right-full gap-8 text-opacity-0"
         }`}
       >
         {NavItems.map((item, index) => (
           <a
             key={index}
             href={item.link}
-            className="font-satoshi text-lg hover:bg-gradient-to-r hover:from-[#4712b8] hover:to-[#309ff4] hover:bg-clip-text hover:text-xl hover:text-transparent group transition-all duration-300 ease-in-out lg:ml-8"
-            onClick={() => mobilenav && setmobilenav(!mobilenav)}
+            className="font-satoshi text-lg hover:bg-gradient-to-r hover:from-[#4712b8] hover:to-[#309ff4] hover:bg-clip-text hover:text-xl hover:text-transparent group transition-all duration-300 ease-in-out"
+            onClick={() => setmobilenav(false)}
           >
             {item.title}
           </a>
         ))}
+        <Link
+          to="/signin"
+          className="px-6 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors font-medium"
+          onClick={() => setmobilenav(false)}
+        >
+          Login
+        </Link>
       </div>
+
+      <Link
+        to="/signin"
+        className="hidden lg:block px-6 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors font-medium"
+      >
+        Login
+      </Link>
+
     </div>
   );
 };
