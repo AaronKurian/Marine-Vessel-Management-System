@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SignIn from '../components/SignIn'
 import SignUp from '../components/SignUp'
+import logo from "../assets/logo.png";
 
 const Auth = () => {
   const location = useLocation()
@@ -9,10 +10,9 @@ const Auth = () => {
 
   return (
     <div className='flex flex-col items-center justify-center max-w-screen min-h-screen overflow-scroll pb-16 bg-[#07061B] text-white p-8'>
-      <div className='my-4 text-center'>
-        <div className='text-4xl font-extrabold tracking-widest'>[MVMS]</div>
-        <div className='text-lg '>Marine Vessel</div>
-        <div className='text-lg '>Management System</div>
+      <div className='my-4 text-center flex flex-col items-center gap-2 mb-10'>
+        <img src={logo} alt="Marine Vessel Management System Logo" className="w-12 h-12 rounded-full " />
+        <div className='text-lg '>Marine Vessel Management System</div>
       </div>
 
       <div className='w-full max-w-lg bg-zinc-900cdcd border border-white/20 rounded-lg p-1 shadow-xl/30 shadow-black/40 mb-3 md:mb-6'>

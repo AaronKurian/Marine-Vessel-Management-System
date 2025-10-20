@@ -3,6 +3,7 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import { IoCloseOutline } from "react-icons/io5";
 import { NavItems } from "../constants";
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const Navbar = () => {
   const [mobilenav, setmobilenav] = useState(false);
@@ -35,11 +36,11 @@ const Navbar = () => {
     >
       <a 
         href="/" 
-        title="MVMS"
-        aria-label="MVMS Website"
-        className="mt-2 z-10"
+        title="Marine Vessel Management System"
+        aria-label="Marine Vessel Management System Website"
+        className="mt-2 z-10 border-2 border-blue-800/60 rounded-full p-1 shadow-[0_0_12px_2px_rgba(80,200,255,0.6),0_0_24px_4px_rgba(80,200,255,0.3)] animate-pulse"
       >
-        <p className="text-2xl font-bold">MVMS</p>
+        <img src={logo} alt="Marine Vessel Management System Logo" className="w-12 h-12 rounded-full " />
       </a>
 
       <button

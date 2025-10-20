@@ -1,4 +1,5 @@
 import React from 'react'
+import logo from "../assets/logo.png";
 
 const Footer = () => {
   const year = new Date().getFullYear()
@@ -7,7 +8,7 @@ const Footer = () => {
     <footer id='footer' className='w-full mt-16 border-t border-white/10 bg-black/30'>
       <div className='max-w-6xl mx-auto px-6 md:px-8 lg:px-10 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 items-start text-white'>
         <div>
-          <div className='text-2xl font-extrabold tracking-widest'>[MVMS]</div>
+          <img src={logo} alt="Marine Vessel Management System Logo" className="w-12 h-12 rounded-full " />
           <p className='text-gray-300 mt-2'>Marine Vessel Management System</p>
         </div>
 
