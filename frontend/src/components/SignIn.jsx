@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import FloatingInput from './FloatingInput'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
@@ -32,7 +33,10 @@ const SignIn = () => {
       if (res.ok && data.success) {
         // Verify password matches (basic check - in production use hashed passwords)
         if (data.user.password === password) {
-          alert(`Welcome back, ${data.user.name}!`);
+          toast.success(`Welcome back, ${data.user.name}!`, {
+            position: "top-right",
+            autoClose: 3000,
+          });
 
 
           // Store user data in sessionStorage for use across the app
@@ -58,14 +62,23 @@ const SignIn = () => {
             navigate('/dashboard');
           }
         } else {
-          alert('Incorrect password. Please try again.');
+          toast.error('Incorrect password. Please try again.', {
+            position: "top-right",
+            autoClose: 3000,
+          });
         }
       } else {
-        alert(data.error || 'Login failed. Please check your credentials.');
+        toast.error(data.error || 'Login failed. Please check your credentials.', {
+          position: "top-right",
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Error connecting to server. Please try again later.');
+      toast.error('Error connecting to server. Please try again later.', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setIsLoading(false);
     }

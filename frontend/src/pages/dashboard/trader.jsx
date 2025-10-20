@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { FaPlus } from 'react-icons/fa'
+import { toast } from 'react-toastify'
 import FloatingInput from '../../components/FloatingInput'
 import { useNavigate } from 'react-router-dom'
 
@@ -22,7 +23,7 @@ const getStatusColor = (status) => {
     case 'at sea':
       return 'text-blue-400'
     default:
-      return 'text-gray-400'
+      return 'text-slate-400'
   }
 }
 
@@ -37,7 +38,10 @@ const NewCargoRequestModal = ({ voyage, traderId, onClose, onSuccess }) => {
     setIsLoading(true)
 
     if (!cargoManifest || !cratesRequested) {
-      alert('Please fill in both cargo manifest and crates requested.')
+      toast.warning('Please fill in both cargo manifest and crates requested.', {
+        position: "top-right",
+        autoClose: 3000,
+      })
       setIsLoading(false)
       return
     }
@@ -58,34 +62,43 @@ const NewCargoRequestModal = ({ voyage, traderId, onClose, onSuccess }) => {
 
       const data = await res.json()
       if (res.ok && data.success) {
-        alert('Cargo request submitted successfully! Status: Pending.')
+        toast.success('Cargo request submitted successfully! Status: Pending.', {
+          position: "top-right",
+          autoClose: 3000,
+        })
         onSuccess()
         onClose()
       } else {
-        alert(data.error || 'Failed to submit cargo request')
+        toast.error(data.error || 'Failed to submit cargo request', {
+          position: "top-right",
+          autoClose: 3000,
+        })
       }
     } catch (err) {
       console.error('Error submitting cargo request:', err)
-      alert('Error connecting to server')
+      toast.error('Error connecting to server', {
+        position: "top-right",
+        autoClose: 3000,
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className='bg-[#1f2437] rounded-lg p-6 w-full max-w-md mx-auto'>
+    <div className='bg-[#0b0c1a] rounded-xl p-6 md:p-8 w-full max-w-md mx-auto border border-white/10 shadow-2xl'>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold text-white">Create Cargo Request</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+        <h3 className="text-xl md:text-2xl font-semibold text-white tracking-wide">Create Cargo Request</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl transition-colors">×</button>
       </div>
 
-      <div className='mb-4 space-y-2 text-sm'>
-        <p><strong>Vessel:</strong> {voyage.vessel_name} ({voyage.imo_number})</p>
-        <p><strong>Route:</strong> {voyage.departure_port} → {voyage.arrival_port}</p>
-        <p><strong>Departure:</strong> {new Date(voyage.departure_date).toLocaleDateString()}</p>
+      <div className='mb-6 space-y-2 text-sm p-4 bg-black/20 rounded-lg border border-white/10'>
+        <p className="text-gray-300"><span className="font-semibold text-white">Vessel:</span> {voyage.vessel_name} ({voyage.imo_number})</p>
+        <p className="text-gray-300"><span className="font-semibold text-white">Route:</span> {voyage.departure_port} → {voyage.arrival_port}</p>
+        <p className="text-gray-300"><span className="font-semibold text-white">Departure:</span> {new Date(voyage.departure_date).toLocaleDateString()}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <FloatingInput
           type='text'
           label='Cargo Manifest (e.g., product type)'
@@ -101,11 +114,11 @@ const NewCargoRequestModal = ({ voyage, traderId, onClose, onSuccess }) => {
           onChange={e => setCratesRequested(e.target.value)}
         />
         
-        <div className="flex justify-end space-x-3 pt-4">
+        <div className="flex justify-end space-x-3 pt-4 mt-6 border-t border-white/10">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700"
+            className="px-5 py-2.5 border border-white/10 rounded-full text-gray-300 hover:bg-white/5 transition-colors"
             disabled={isLoading}
           >
             Cancel
@@ -113,7 +126,7 @@ const NewCargoRequestModal = ({ voyage, traderId, onClose, onSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-5 py-2.5 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors disabled:opacity-50"
           >
             {isLoading ? 'Submitting...' : 'Submit Request'}
           </button>
@@ -220,7 +233,7 @@ const TraderDashboard = () => {
     <div className='min-h-screen bg-[#0b0c1a] text-white px-5 md:px-8 py-5 md:py-8'>
       
       <div className='flex items-center justify-between'>
-        <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Trader Dashboard</div>
+        <div className='text-2xl md:text-3xl font-extrabold tracking-widest bg-gradient-to-b from-white to-gray-500 text-transparent bg-clip-text'>Trader Dashboard</div>
         <button 
           onClick={handleLogout} 
           className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
@@ -233,7 +246,7 @@ const TraderDashboard = () => {
         
         {/* Available Voyages Section */}
         <section>
-          <h2 className='text-xl md:text-2xl font-semibold tracking-wide mb-4'>Available Voyages for Cargo:</h2>
+          <h2 className='text-xl md:text-2xl font-semibold tracking-wide mb-4 mt-8'>Available Voyages for Cargo</h2>
           
           <div className='rounded-md border border-white/15 bg-[#2f344a]/70 max-h-[400px] overflow-y-auto'>
             {loadingVoyages ? (
@@ -248,7 +261,7 @@ const TraderDashboard = () => {
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Route</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Departure</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">Status</th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-gray-300">Action</th>
+                    <th className="pl-36 py-3 text-left text-sm font-semibold text-gray-300">Action</th>
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-gray-700/30'>
@@ -285,7 +298,7 @@ const TraderDashboard = () => {
 
         {/* My Cargo Requests Section */}
         <section>
-          <h2 className='text-xl md:text-2xl font-semibold tracking-wide mb-4'>My Cargo Requests:</h2>
+          <h2 className='text-xl md:text-2xl font-semibold tracking-wide mt-8 mb-4'>My Cargo Requests</h2>
           
           <div className='rounded-md border border-white/15 bg-[#2f344a]/70 max-h-[400px] overflow-y-auto'>
             {loadingRequests ? (
@@ -306,16 +319,16 @@ const TraderDashboard = () => {
                 <tbody className='divide-y divide-gray-700/30'>
                   {myCargoRequests.map((r) => (
                     <tr key={r.request_id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">{r.request_id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-200">{r.request_id}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-white font-medium">{r.cargo_manifest}</div>
                           <div className="text-gray-400 text-sm">{r.crates_requested} crates</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-gray-300">{r.voyage.vessel_name} ({r.voyage.imo_number})</div>
+                        <div className="text-gray-200">{r.voyage.vessel_name} ({r.voyage.imo_number})</div>
                         <div className="text-gray-400 text-sm">{r.voyage.departure_port} &rarr; {r.voyage.arrival_port}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-200">
                           {new Date(r.created_at).toLocaleDateString()}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap font-semibold ${getStatusColor(r.status)}`}>

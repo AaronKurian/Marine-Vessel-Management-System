@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
@@ -53,7 +54,10 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!selectedVessel || !departurePort || !arrivalPort || !departureDate) {
-      alert('Please fill in all required fields')
+      toast.warning('Please fill in all required fields', {
+        position: "top-right",
+        autoClose: 3000,
+      })
       return
     }
 
@@ -75,39 +79,48 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
 
       const data = await res.json()
       if (res.ok && data.success) {
-        alert('Voyage scheduled successfully!')
+        toast.success('Voyage scheduled successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+        })
         if (onVoyageScheduled) onVoyageScheduled()
         onClose()
       } else {
-        alert(data.error || 'Failed to schedule voyage')
+        toast.error(data.error || 'Failed to schedule voyage', {
+          position: "top-right",
+          autoClose: 3000,
+        })
       }
     } catch (err) {
       console.error('Error scheduling voyage:', err)
-      alert('Error scheduling voyage')
+      toast.error('Error scheduling voyage', {
+        position: "top-right",
+        autoClose: 3000,
+      })
     }
   }
 
   if (loading) {
     return (
-      <div className="bg-[#1f2437] rounded-lg p-6 w-full">
+      <div className="bg-[#0b0c1a] rounded-xl p-6 md:p-8 w-full border border-white/10 shadow-2xl">
         <div className="text-center text-gray-400">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="bg-[#1f2437] rounded-lg p-6 w-full">
+    <div className="bg-[#0b0c1a] rounded-xl p-6 md:p-8 w-full border border-white/10 shadow-2xl scale-80">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-white">Schedule New Voyage</h2>
+        <h2 className="text-xl md:text-2xl font-semibold text-white tracking-wide">Schedule New Voyage</h2>
         <button 
           onClick={onClose}
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white text-2xl transition-colors"
         >
-          ✕
+          ×
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
             Select Vessel
@@ -116,7 +129,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             value={selectedVessel}
             onChange={(e) => setSelectedVessel(e.target.value)}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="">Select a vessel</option>
             {vessels.map((vessel) => (
@@ -135,7 +148,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             value={departurePort}
             onChange={(e) => setDeparturePort(e.target.value)}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="">Select departure port</option>
             {ports.map((port) => (
@@ -154,7 +167,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             value={arrivalPort}
             onChange={(e) => setArrivalPort(e.target.value)}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="">Select arrival port</option>
             {ports.map((port) => (
@@ -175,7 +188,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             dateFormat="dd-MM-yyyy"
             minDate={new Date()}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
             placeholderText="Select departure date"
           />
         </div>
@@ -189,7 +202,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
             onChange={(date) => setArrivalDate(date)}
             dateFormat="dd-MM-yyyy"
             minDate={departureDate || new Date()}
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
             placeholderText="Select arrival date"
           />
         </div>
@@ -201,7 +214,7 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="Not Departed">Not Departed</option>
             <option value="In Transit">In Transit</option>
@@ -210,17 +223,17 @@ const NewVoyage = ({ onClose, onVoyageScheduled }) => {
           </select>
         </div>
 
-        <div className="flex justify-end space-x-3 mt-6">
+        <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700"
+            className="px-5 py-2.5 border border-white/10 rounded-full text-gray-300 hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+            className="px-5 py-2.5 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors"
           >
             Schedule Voyage
           </button>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 import FloatingInput from './FloatingInput'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import Dropdown from './Dropdown'
@@ -37,14 +38,23 @@ const SignUp = () => {
       const succeeded = res.ok || data?.user || res.status === 201;
 
       if (succeeded) {
-        alert(data?.message || 'Signup successful! Redirecting to sign in...');
-        navigate('/signin'); // Fixed: was /login, now /signin
+        toast.success(data?.message || 'Signup successful! Redirecting to sign in...', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setTimeout(() => navigate('/signin'), 1000);
       } else {
-        alert(data?.error || data?.message || 'Signup failed');
+        toast.error(data?.error || data?.message || 'Signup failed', {
+          position: "top-right",
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.error(error);
-      alert('Error connecting to server');
+      toast.error('Error connecting to server', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setIsLoading(false);
     }

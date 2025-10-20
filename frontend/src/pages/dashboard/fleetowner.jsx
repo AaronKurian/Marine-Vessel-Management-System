@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaPlus } from 'react-icons/fa'
+import { toast } from 'react-toastify'
 import AddVessel from '../../components/utils/addvessel'
 import NewVoyage from '../../components/utils/addvoyage'
+import CargoRequests from '../../components/utils/addcargo'
 
 // Helper function moved from VesselRow.jsx
 const normalizeStatus = (status) => {
@@ -47,6 +49,8 @@ const FleetDashboard = () => {
   const [loadingVoyages, setLoadingVoyages] = useState(false)
   const [cargoRequests, setCargoRequests] = useState([])
   const [loadingRequests, setLoadingRequests] = useState(false)
+  const [cargoModalOpen, setCargoModalOpen] = useState(false)
+  const [selectedCargoRequest, setSelectedCargoRequest] = useState(null)
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -132,12 +136,18 @@ const FleetDashboard = () => {
   const submitVessel = async (vesselData) => {
     const owner = ownerId
     if (!owner) {
-      alert('Owner ID missing')
+      toast.error('Owner ID missing', {
+        position: "top-right",
+        autoClose: 3000,
+      })
       return
     }
 
     if (!vesselData.imo_number || !vesselData.vessel_name) {
-      alert('Please enter IMO number and vessel name')
+      toast.warning('Please enter IMO number and vessel name', {
+        position: "top-right",
+        autoClose: 3000,
+      })
       return
     }
 
@@ -161,12 +171,22 @@ const FleetDashboard = () => {
       if (res.ok && data.success) {
         await fetchVessels()
         setModalOpen(false)
+        toast.success('Vessel added successfully', {
+          position: "top-right",
+          autoClose: 3000,
+        })
       } else {
-        alert(data.error || 'Failed to add vessel')
+        toast.error(data.error || 'Failed to add vessel', {
+          position: "top-right",
+          autoClose: 3000,
+        })
       }
     } catch (err) {
       console.error('Error adding vessel:', err)
-      alert('Error adding vessel')
+      toast.error('Error adding vessel', {
+        position: "top-right",
+        autoClose: 3000,
+      })
     }
   }
 
@@ -208,13 +228,23 @@ const FleetDashboard = () => {
       )
       if (res.ok) {
         fetchCargoRequests(ownerId)
+        toast.success(`Request ${newStatus}`, {
+          position: "top-right",
+          autoClose: 3000,
+        })
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to update request status')
+        toast.error(data.error || 'Failed to update request status', {
+          position: "top-right",
+          autoClose: 3000,
+        })
       }
     } catch (err) {
       console.error('Error updating request:', err)
-      alert('Failed to update request status')
+      toast.error('Failed to update request status', {
+        position: "top-right",
+        autoClose: 3000,
+      })
     }
   }
 
@@ -251,8 +281,8 @@ const FleetDashboard = () => {
   return (
     <div className='min-h-screen bg-[#0b0c1a] text-white px-5 md:px-8 py-5 md:py-8'>
       <div className='flex items-center justify-between'>
-        <div className='text-2xl md:text-3xl font-extrabold tracking-widest'>[MVMS] Fleet</div>
-        <button 
+      <div className='text-2xl md:text-3xl font-extrabold tracking-widest bg-gradient-to-b from-white to-gray-500 text-transparent bg-clip-text'>Fleet Owner</div>
+      <button 
           onClick={handleLogout} 
           className='bg-[#1E1E1E] border border-white/10 text-red-500/80 hover:text-red-600 cursor-pointer rounded-full px-6 py-1'
         >
@@ -261,19 +291,54 @@ const FleetDashboard = () => {
       </div>
 
       <div className='mt-6 flex flex-col lg:flex-row gap-6'>
-        {/* Left: Voyages column (smaller) */}
-        <div className='w-full lg:w-80'>
-          <div className='flex items-center justify-between mb-4'>
-            <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Voyages:</h2>
-            <button 
-              onClick={() => setVoyageModalOpen(true)}
-              className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full px-3 py-1 border border-white/10'
-            >
-              Schedule
+        {/* Left: Vessels column (wider) */}
+        <div className='flex-1'>
+          <div className='flex items-center justify-between mb-4 mt-6'>
+            <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Vessels</h2>
+            <button onClick={async () => {
+              const captains = await fetchCaptains(ownerId)
+              setModalOpen(true)
+              setInitialCaptains(captains)
+            }} className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold rounded-full px-5 py-1 border border-white/10'>
+              Add Vessel <FaPlus className='inline-block ml-1' />
             </button>
           </div>
 
-          <div className='rounded-md border border-white/15 bg-[#2f344a]/70 flex flex-col gap-2 max-h-[600px] overflow-y-auto'>
+          {loading ? (
+            <div className='p-4 text-center text-gray-400'>Loading vessels...</div>
+          ) : (
+            <div className='rounded-md overflow-hidden border border-white/15 bg-[#2f344a]/70 h-[320px] overflow-y-auto'>
+              {vessels.length === 0 ? (
+                <div className='p-4 text-center text-gray-400'>No vessels found.</div>
+              ) : (
+                vessels.map((v, i) => (
+                  <VesselRow 
+                    key={`${v.vessel_id || v.id}-${i}`} 
+                    idx={i + 1} 
+                    imo={v.imo_number || v.imo} 
+                    name={v.vessel_name || v.name} 
+                    captain={v.captain_name || v.captain} 
+                    status={v.status} 
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Voyages column (narrower) */}
+        <div className='w-full lg:w-100'>
+          <div className='flex items-center justify-between mb-4 mt-6'>
+            <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Voyages</h2>
+            <button 
+              onClick={() => setVoyageModalOpen(true)}
+              className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold rounded-full px-3 py-1 border border-white/10'
+            >
+              Schedule <FaPlus className='inline-block ml-1' />
+            </button>
+          </div>
+
+          <div className='rounded-md border border-white/15 bg-[#2f344a]/70 flex flex-col gap-2 h-[320px] overflow-y-scroll'>
             {loadingVoyages ? (
               <div className="p-4 text-center text-gray-400">Loading voyages...</div>
             ) : voyages.length === 0 ? (
@@ -293,108 +358,64 @@ const FleetDashboard = () => {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Right: Main content */}
-        <div className='flex-1 space-y-6'>
-          {/* Vessels section */}
-          <div>
-            <div className='flex items-center justify-between mb-4'>
-              <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Vessels:</h2>
-              <button onClick={async () => {
-                const captains = await fetchCaptains(ownerId)
-                setModalOpen(true)
-                setInitialCaptains(captains)
-              }} className='cursor-pointer text-sm bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold rounded-full px-5 py-1 border border-white/10'>
-                Add Vessel <FaPlus className='inline-block ml-1' />
-              </button>
-            </div>
-
-            {loading ? (
-              <div className='p-4 text-center text-gray-400'>Loading vessels...</div>
-            ) : (
-              <div className='rounded-md overflow-hidden border border-white/15 bg-[#2f344a]/70 max-h-[300px] overflow-y-auto'>
-                {vessels.length === 0 ? (
-                  <div className='p-4 text-center text-gray-400'>No vessels found.</div>
-                ) : (
-                  vessels.map((v, i) => (
-                    <VesselRow 
-                      key={`${v.vessel_id || v.id}-${i}`} 
-                      idx={i + 1} 
-                      imo={v.imo_number || v.imo} 
-                      name={v.vessel_name || v.name} 
-                      captain={v.captain_name || v.captain} 
-                      status={v.status} 
-                    />
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Cargo Requests section */}
-          <div>
-            <h2 className='text-xl md:text-2xl font-semibold tracking-wide mb-4'>Cargo Requests:</h2>
-            <div className='rounded-md border border-white/15 bg-[#2f344a]/70'>
-              {loadingRequests ? (
-                <div className='p-4 text-center text-gray-400'>Loading cargo requests...</div>
-              ) : cargoRequests.length === 0 ? (
-                <div className='p-4 text-center text-gray-400'>No cargo requests found.</div>
-              ) : (
-                <div className='max-h-[300px] overflow-y-auto'>
-                  {cargoRequests.map((request) => (
-                    <div
-                      key={request.request_id}
-                      className="flex items-center justify-between border-b border-gray-600/30 last:border-none p-4"
-                    >
-                      <div className="grid grid-cols-6 gap-4 w-full">
-                        <div className="text-gray-300">
-                          {request.vessels?.imo_number || 'N/A'}
-                        </div>
-                        <div className="text-gray-300">
-                          {request.vessels?.vessel_name || 'N/A'}
-                        </div>
-                        <div className="text-gray-300">
-                          {request.voyages?.departure_port || 'N/A'}
-                        </div>
-                        <div className="text-gray-300">
-                          {request.voyages?.arrival_port || 'N/A'}
-                        </div>
-                        <div className="text-gray-300">
-                          {request.crates_requested} crates
-                        </div>
-                        <div className={
-                          request.status === 'Approved' 
-                            ? 'text-emerald-400' 
-                            : request.status === 'Pending'
-                              ? 'text-yellow-400'
-                              : 'text-gray-400'
-                        }>
-                          {request.status}
-                        </div>
-                      </div>
-
-                      {request.status === 'Pending' && (
-                        <div className="flex space-x-2 ml-4">
-                          <button
-                            onClick={() => handleUpdateCargoStatus(request.request_id, 'Approved')}
-                            className="px-3 py-1 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUpdateCargoStatus(request.request_id, 'Rejected')}
-                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+      {/* Cargo Requests section - full width at bottom */}
+      <div className='mt-6'>
+        <h2 className='text-xl md:text-2xl font-semibold tracking-wide mb-4'>Cargo Requests</h2>
+        <div className='rounded-md border border-white/15 bg-[#2f344a]/70'>
+          {loadingRequests ? (
+            <div className='p-4 text-center text-gray-400'>Loading cargo requests...</div>
+          ) : cargoRequests.length === 0 ? (
+            <div className='p-4 text-center text-gray-400'>No cargo requests found.</div>
+          ) : (
+            <div className='max-h-[320px] overflow-y-auto'>
+              {cargoRequests.map((request) => (
+                <div
+                  key={request.request_id}
+                  onClick={() => {
+                    setSelectedCargoRequest(request)
+                    setCargoModalOpen(true)
+                  }}
+                  className="flex items-center justify-between border-b border-gray-600/30 last:border-none p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                >
+                  <div className="grid grid-cols-6 gap-4 w-full">
+                    <div className="text-gray-300">
+                      {request.request_id || '-'}
                     </div>
-                  ))}
+                    <div className="text-gray-300">
+                      {request.vessels?.imo_number || '-'}
+                    </div>
+                    <div className="text-gray-300">
+                      {request.vessels?.vessel_name || '-'}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 w-full">
+                      <div className="text-gray-300">
+                        {request.voyages?.departure_port || '-'}
+                      </div>
+                      <div className="mx-2 mt-6 opacity-60 w-6 h-px bg-white" />
+                      <div className="text-gray-300">
+                        {request.voyages?.arrival_port || '-'}
+                      </div>
+                    </div>
+                    <div className="pl-8 text-gray-300">
+                      {request.crates_requested} crates
+                    </div>
+                    <div className={
+                      request.status === 'Approved' 
+                        ? 'text-emerald-400' 
+                        : request.status === 'Pending'
+                          ? 'text-yellow-400'
+                          : 'text-gray-400'
+                    }>
+                      {request.status}
+                    </div>
+                  </div>
+
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -420,6 +441,35 @@ const FleetDashboard = () => {
               onClose={() => setModalOpen(false)}
               onSubmit={submitVessel}
               initialData={{ captains: initialCaptains }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Cargo Request Modal */}
+      {cargoModalOpen && selectedCargoRequest && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+          <div className='absolute inset-0 bg-black/60' onClick={() => setCargoModalOpen(false)} />
+          <div className='relative z-10 w-full max-w-2xl bg-[#0b0c1a] rounded-xl p-6 md:p-8 border border-white/10 shadow-2xl'>
+            <div className='flex items-center justify-between mb-6'>
+              <h2 className='text-xl md:text-2xl font-semibold tracking-wide'>Cargo Request Details</h2>
+              <button 
+                onClick={() => {
+                  setCargoModalOpen(false)
+                  setSelectedCargoRequest(null)
+                }}
+                className='text-gray-400 hover:text-white text-2xl transition-colors'
+              >
+                ×
+              </button>
+            </div>
+            <CargoRequests 
+              requests={[selectedCargoRequest]}
+              onStatusUpdate={(requestId, newStatus) => {
+                handleUpdateCargoStatus(requestId, newStatus)
+                setCargoModalOpen(false)
+                setSelectedCargoRequest(null)
+              }}
             />
           </div>
         </div>

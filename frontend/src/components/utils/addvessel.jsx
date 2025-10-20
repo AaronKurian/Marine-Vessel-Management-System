@@ -44,18 +44,18 @@ const AddVessel = ({ onSubmit, onClose }) => {
   };
 
   return (
-    <div className="bg-[#1f2437] rounded-lg p-6 w-full">
+    <div className="bg-[#0b0c1a] rounded-xl p-6 md:p-8 w-full border border-white/10 shadow-2xl scale-90">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-white">Add New Vessel</h2>
+        <h2 className="text-xl md:text-2xl font-semibold text-white tracking-wide">Add New Vessel</h2>
         <button 
           onClick={onClose}
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white text-2xl transition-colors"
         >
-          ✕
+          ×
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
             IMO Number
@@ -66,7 +66,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
             value={vesselData.imo_number}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
             placeholder="Enter IMO number"
           />
         </div>
@@ -81,7 +81,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
             value={vesselData.vessel_name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
             placeholder="Enter vessel name"
           />
         </div>
@@ -94,7 +94,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
             name="status"
             value={vesselData.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="At Port">At Port</option>
             <option value="In Transit">At Sea</option>
@@ -110,7 +110,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
             name="capacity"
             value={vesselData.capacity}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
             placeholder="Enter vessel capacity"
           />
         </div>
@@ -123,7 +123,7 @@ const AddVessel = ({ onSubmit, onClose }) => {
             name="captain_id"
             value={vesselData.captain_id}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-[#2f344a] border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
           >
             <option value="">Select a Captain</option>
             {captains.map(captain => (
@@ -134,17 +134,17 @@ const AddVessel = ({ onSubmit, onClose }) => {
           </select>
         </div>
 
-        <div className="flex justify-end space-x-3 mt-6">
+        <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700"
+            className="px-5 py-2.5 border border-white/10 rounded-full text-gray-300 hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-5 py-2.5 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-full border border-white/10 transition-colors"
           >
             Add Vessel
           </button>
